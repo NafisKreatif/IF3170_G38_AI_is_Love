@@ -1,5 +1,11 @@
 import json
 
+class Position:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
 class Dimensions:
     def __init__(self, width, length, height):
         self.width = width
@@ -21,6 +27,7 @@ class TruckKun:
 
         if id == "truck_" + self.id_count:
             id_count += 1
+            
             
 class LovePackage:
     id_count = 0
@@ -47,6 +54,159 @@ class Isekai:
     def __init__(self, trucks: list[TruckKun], packages: list[LovePackage]):
         self.trucks = trucks
         self.packages = packages
+        
+class IsekaiConfiguration():
+    def __init__(self, isekai: Isekai):
+        self.isekai = isekai
+
+        self.package_truck = dict[LovePackage, TruckKun]() # package -> truck
+        self.package_position = dict[LovePackage, Position]() # package -> position
+        self.package_orientation = dict[LovePackage, Orientation]() # package -> orientation
+         
+    def configure_package(self, package: LovePackage, truck: TruckKun, position: Position = Position(0, 0, 0), orientation: Orientation = Orientation()) -> bool:
+        self.package_truck[package] = truck
+        self.package_position[package] = position
+        self.package_orientation[package] = orientation
+        return self.is_valid()
+
+    def remove_package(self, package: LovePackage) -> bool:
+        self.package_truck.pop(package)
+        self.package_position.pop(package)
+        self.package_orientation.pop(package)
+        return self.is_valid()
+
+    def set_package_truck(self, package: LovePackage, truck: TruckKun) -> bool:
+        self.package_truck[package] = truck
+        return self.is_valid()
+
+    def set_package_position(self, package: LovePackage, position: Position) -> bool:
+        self.package_position[package] = position
+        return self.is_valid()
+
+    def set_package_orientation(self, package: LovePackage, orientation: Orientation) -> bool:
+        self.package_orientation[package] = orientation
+        return self.is_valid()
+
+    def get_package_truck(self, package: LovePackage) -> TruckKun:    
+        return self.package_truck.get(package)
+
+    def get_package_position(self, package: LovePackage) -> Position:    
+            return self.package_position.get(package)
+
+    def get_package_orientation(self, package: LovePackage) -> Orientation:    
+            return self.package_orientation.get(package)
+         
+    def is_valid(self) -> bool:
+        valid = True
+
+        for truck in self.isekai.trucks:
+            if (self.total_weight(truck) > truck.max_capacity):
+                valid = False
+            if not valid: break
+
+        for package in self.isekai.packages:
+            if self.package_is_intersecting(package):
+                valid = False
+            if not self.package_is_supported(package):
+                valid = False
+            if package.is_fragile and self.package_is_supporting(package):
+                valid = False
+            if not valid: break
+
+        return valid
+
+    def total_weight(self, truck: TruckKun):
+        total = 0
+        for package, truckKun in self.package_truck:
+            if truck is truckKun:
+                total += package.weight
+        return total
+
+    def package_is_supported(self, package: LovePackage) -> bool:
+        if self.get_package_truck(package) is None:
+            return False
+        
+        bounds = self.calculate_bound(package)
+        if bounds[0].y == 0:
+            return True
+
+        for other_package in self.isekai.packages:
+            if package is other_package:
+                            continue
+            if self.get_package_truck(package) is not self.get_package_truck(other_package):
+                continue
+            other_bounds = self.calculate_bound(package)
+            intersecting_area = not (
+                bounds[1].x < other_bounds[0].x or bounds[0].x > other_bounds[0].x or
+                bounds[1].z < other_bounds[0].z or bounds[0].z > other_bounds[0].z
+            )
+            if intersecting_area and bounds[0].y == other_bounds[1].y:
+                return True
+        
+        return False
+    
+    def package_is_supporting(self, package: LovePackage) -> bool:
+        if self.get_package_truck(package) is None:
+            return False
+        
+        bounds = self.calculate_bound(package)
+        if bounds[0].y == 0:
+            return True
+
+        for other_package in self.isekai.packages:
+            if package is other_package:
+                            continue
+            if self.get_package_truck(package) is not self.get_package_truck(other_package):
+                continue
+            other_bounds = self.calculate_bound(package)
+            intersecting_area = not (
+                bounds[1].x < other_bounds[0].x or bounds[0].x > other_bounds[0].x or
+                bounds[1].z < other_bounds[0].z or bounds[0].z > other_bounds[0].z
+            )
+            if intersecting_area and bounds[1].y == other_bounds[0].y:
+                return True
+        
+        return False
+    
+    def calculate_bound(self, package: LovePackage) -> list[Position]:
+        first_point = self.get_package_position(package)
+        other_point = self.get_package_position(package)
+        orientation = self.get_package_orientation(package)
+        match orientation.width_orientation:
+            case "x": other_point.x += package.dimensions.width
+            case "y": other_point.y += package.dimensions.width
+            case "z": other_point.z += package.dimensions.width
+        match orientation.height_orientation:
+            case "x": other_point.x += package.dimensions.height
+            case "y": other_point.y += package.dimensions.height
+            case "z": other_point.z += package.dimensions.height
+        match orientation.length_orientation:
+            case "x": other_point.x += package.dimensions.length
+            case "y": other_point.y += package.dimensions.length
+            case "z": other_point.z += package.dimensions.length
+        return [first_point, other_point]
+        
+    def package_is_intersecting(self, package: LovePackage) -> bool:
+        if self.get_package_truck(package) is None:
+            return False
+        
+        intersecting = False
+        bounds = self.calculate_bound(package)
+        for other_package in self.isekai.packages:
+            if package is other_package:
+                continue
+            if self.get_package_truck(package) is not self.get_package_truck(other_package):
+                continue
+            other_bounds = self.calculate_bound(other_package)
+            if not (
+                bounds[1].x <= other_bounds[0].x or bounds[0].x >= other_bounds[0].x or
+                bounds[1].y <= other_bounds[0].y or bounds[0].y >= other_bounds[0].y or
+                bounds[1].z <= other_bounds[0].z or bounds[0].z >= other_bounds[0].z
+            ):
+                intersecting = True
+                break
+
+        return intersecting
 
 def truck_from_obj(obj):
     if obj["type"] != "truck":
