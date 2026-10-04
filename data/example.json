@@ -1,0 +1,30 @@
+[
+  {
+    "type": "truck",
+    "id": "Truck1",
+    "dimensions": {
+      "w": 10,
+      "h": 20,
+      "l": 5
+    },
+    "max_capacity": 500
+  },
+  {
+    "type": "package",
+    "id": "Package1",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 60,
+    "weight": 5,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  }
+]
