@@ -108,9 +108,8 @@ def parse_isekai(json_string: str):
     return Isekai(truckKuns, lovePackages)
 
 def load_isekai_from_file(filepath: str):
-    file = open(filepath)
-    result = parse_isekai(file.read())
-    file.close()
+    with open(filepath, "r") as file:
+        result = parse_isekai(file.read())
     return result
 
 def isekai_to_str(isekai: Isekai):
@@ -122,6 +121,5 @@ def isekai_to_str(isekai: Isekai):
     return json.dumps(objs)
     
 def save_isekai_to_file(isekai: Isekai, filepath: str):
-    file = open(filepath)
-    file.write(isekai_to_str(isekai))
-    file.close
+    with open(filepath, "w") as file:
+        file.write(isekai_to_str(isekai))
