@@ -20,19 +20,19 @@ class Orientation:
 
 class TruckKun:
     id_count = 0
-    def __init__(self, id = "truck_" + id_count, dimensions = Dimensions(10, 10, 10), max_capacity = 1000):
+    def __init__(self, id = "truck_" + str(id_count), dimensions = Dimensions(10, 10, 10), max_capacity = 1000):
         self.id = id
         self.dimensions = dimensions
         self.max_capacity = max_capacity
 
-        if id == "truck_" + self.id_count:
+        if id == "truck_" + str(self.id_count):
             id_count += 1
             
             
 class LovePackage:
     id_count = 0
 
-    def __init__(self, id = "package_" + id_count,
+    def __init__(self, id = "package_" + str(id_count),
                  dimensions = Dimensions(10, 10, 10),
                  orientation = Orientation("x", "y", "z"),
                  value = 10,
@@ -47,7 +47,7 @@ class LovePackage:
         self.is_fragile = is_fragile,
         self.estimated_time_of_arrival = estimated_time_of_arrival
 
-        if id == "package_" + self.id_count:
+        if id == "package_" + str(self.id_count):
             id_count += 1
 
 class Isekai:
@@ -258,7 +258,7 @@ def parse_isekai(json_string: str):
     truckKuns = []
     lovePackages = []
 
-    objs = json.load(json_string)
+    objs = json.loads(json_string)
     for obj in objs:
         if obj["type"] == "package":
             lovePackages.append(package_from_obj(obj))
