@@ -13,7 +13,7 @@ class Dimensions:
         self.height = height
 
 class Orientation:
-    def __init__(self, width_orientation = "x", length_orientation = "z", height_orientation = "y"):
+    def __init__(self, width_orientation = "x", length_orientation = "y", height_orientation = "z"):
         self.width_orientation = width_orientation
         self.length_orientation = length_orientation
         self.height_orientation = height_orientation
@@ -26,7 +26,7 @@ class TruckKun:
         self.max_capacity = max_capacity
 
         if id == "truck_" + str(self.id_count):
-            id_count += 1
+            TruckKun.id_count += 1
             
             
 class LovePackage:
@@ -44,11 +44,11 @@ class LovePackage:
         self.orientation = orientation
         self.value = value
         self.weight = weight
-        self.is_fragile = is_fragile,
+        self.is_fragile = is_fragile
         self.estimated_time_of_arrival = estimated_time_of_arrival
 
         if id == "package_" + str(self.id_count):
-            id_count += 1
+            LovePackage.id_count += 1
 
 class Isekai:
     def __init__(self, trucks: list[TruckKun], packages: list[LovePackage]):
@@ -95,7 +95,23 @@ class IsekaiConfiguration():
 
     def get_package_orientation(self, package: LovePackage) -> Orientation:    
             return self.package_orientation.get(package)
-         
+    def package_is_outside_truck(self, package:LovePackage) -> bool:
+        truck = self.get_package_truck(package)
+
+        if truck is None:
+            return False
+
+        bounds = self.calculate_bound(package)
+
+        return (
+            bounds[0].x < 0
+            or bounds[0].y < 0
+            or bounds[0].z < 0
+            or bounds[1].x > truck.dimensions.width
+            or bounds[1].y > truck.dimensions.length
+            or bounds[1].z > truck.dimensions.height
+        )
+    
     def is_valid(self) -> bool:
         valid = True
 
@@ -105,6 +121,10 @@ class IsekaiConfiguration():
             if not valid: break
 
         for package in self.isekai.packages:
+            if self.get_package_truck(package) is None:
+                continue
+            if self.package_is_outside_truck(package):
+                valid = False
             if self.package_is_intersecting(package):
                 valid = False
             if not self.package_is_supported(package):
@@ -117,17 +137,17 @@ class IsekaiConfiguration():
 
     def total_weight(self, truck: TruckKun):
         total = 0
-        for package, truckKun in self.package_truck:
+        for package, truckKun in self.package_truck.items():
             if truck is truckKun:
                 total += package.weight
         return total
 
     def package_is_supported(self, package: LovePackage) -> bool:
         if self.get_package_truck(package) is None:
-            return False
+            return True
         
         bounds = self.calculate_bound(package)
-        if bounds[0].y == 0:
+        if bounds[0].z == 0:
             return True
 
         for other_package in self.isekai.packages:
@@ -135,12 +155,14 @@ class IsekaiConfiguration():
                             continue
             if self.get_package_truck(package) is not self.get_package_truck(other_package):
                 continue
-            other_bounds = self.calculate_bound(package)
+            other_bounds = self.calculate_bound(other_package)
             intersecting_area = not (
-                bounds[1].x < other_bounds[0].x or bounds[0].x > other_bounds[0].x or
-                bounds[1].z < other_bounds[0].z or bounds[0].z > other_bounds[0].z
+                bounds[1].x <= other_bounds[0].x
+                or bounds[0].x >= other_bounds[1].x
+                or bounds[1].y <= other_bounds[0].y
+                or bounds[0].y >= other_bounds[1].y
             )
-            if intersecting_area and bounds[0].y == other_bounds[1].y:
+            if intersecting_area and bounds[0].z == other_bounds[1].z:
                 return True
         
         return False
@@ -150,27 +172,26 @@ class IsekaiConfiguration():
             return False
         
         bounds = self.calculate_bound(package)
-        if bounds[0].y == 0:
-            return True
-
         for other_package in self.isekai.packages:
             if package is other_package:
                             continue
             if self.get_package_truck(package) is not self.get_package_truck(other_package):
                 continue
-            other_bounds = self.calculate_bound(package)
+            other_bounds = self.calculate_bound(other_package)
             intersecting_area = not (
-                bounds[1].x < other_bounds[0].x or bounds[0].x > other_bounds[0].x or
-                bounds[1].z < other_bounds[0].z or bounds[0].z > other_bounds[0].z
+                bounds[1].x <= other_bounds[0].x
+                or bounds[0].x >= other_bounds[1].x
+                or bounds[1].y <= other_bounds[0].y
+                or bounds[0].y >= other_bounds[1].y
             )
-            if intersecting_area and bounds[1].y == other_bounds[0].y:
+            if intersecting_area and bounds[1].z == other_bounds[0].z:
                 return True
         
         return False
     
     def calculate_bound(self, package: LovePackage) -> list[Position]:
         first_point = self.get_package_position(package)
-        other_point = self.get_package_position(package)
+        other_point = Position(first_point.x, first_point.y, first_point.z)
         orientation = self.get_package_orientation(package)
         match orientation.width_orientation:
             case "x": other_point.x += package.dimensions.width
@@ -199,9 +220,12 @@ class IsekaiConfiguration():
                 continue
             other_bounds = self.calculate_bound(other_package)
             if not (
-                bounds[1].x <= other_bounds[0].x or bounds[0].x >= other_bounds[0].x or
-                bounds[1].y <= other_bounds[0].y or bounds[0].y >= other_bounds[0].y or
-                bounds[1].z <= other_bounds[0].z or bounds[0].z >= other_bounds[0].z
+                bounds[1].x <= other_bounds[0].x
+                or bounds[0].x >= other_bounds[1].x
+                or bounds[1].y <= other_bounds[0].y
+                or bounds[0].y >= other_bounds[1].y
+                or bounds[1].z <= other_bounds[0].z
+                or bounds[0].z >= other_bounds[1].z
             ):
                 intersecting = True
                 break
