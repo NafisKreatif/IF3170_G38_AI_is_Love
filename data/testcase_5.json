@@ -1,0 +1,372 @@
+[
+  {
+    "type": "truck",
+    "id": "Truck5",
+    "dimensions": {
+      "w": 12,
+      "h": 20,
+      "l": 7
+    },
+    "max_capacity": 540
+  },
+  {
+    "type": "package",
+    "id": "Package1",
+    "dimensions": {
+      "w": 2,
+      "l": 2,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 94,
+    "weight": 9,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package2",
+    "dimensions": {
+      "w": 1,
+      "l": 2,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 110,
+    "weight": 11,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 5
+  },
+  {
+    "type": "package",
+    "id": "Package3",
+    "dimensions": {
+      "w": 3,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 118,
+    "weight": 12,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package4",
+    "dimensions": {
+      "w": 1,
+      "l": 3,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 82,
+    "weight": 8,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package5",
+    "dimensions": {
+      "w": 2,
+      "l": 1,
+      "h": 3
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 128,
+    "weight": 13,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package6",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 4
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 76,
+    "weight": 7,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 6
+  },
+  {
+    "type": "package",
+    "id": "Package7",
+    "dimensions": {
+      "w": 2,
+      "l": 3,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 132,
+    "weight": 13,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package8",
+    "dimensions": {
+      "w": 1,
+      "l": 2,
+      "h": 3
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 136,
+    "weight": 14,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package9",
+    "dimensions": {
+      "w": 3,
+      "l": 2,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 142,
+    "weight": 14,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 5
+  },
+  {
+    "type": "package",
+    "id": "Package10",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 64,
+    "weight": 6,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 1
+  },
+  {
+    "type": "package",
+    "id": "Package11",
+    "dimensions": {
+      "w": 2,
+      "l": 2,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 156,
+    "weight": 15,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package12",
+    "dimensions": {
+      "w": 1,
+      "l": 3,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 98,
+    "weight": 10,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package13",
+    "dimensions": {
+      "w": 2,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 70,
+    "weight": 7,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package14",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 3
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 106,
+    "weight": 10,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 5
+  },
+  {
+    "type": "package",
+    "id": "Package15",
+    "dimensions": {
+      "w": 3,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 146,
+    "weight": 15,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package16",
+    "dimensions": {
+      "w": 2,
+      "l": 3,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 168,
+    "weight": 17,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 6
+  },
+  {
+    "type": "package",
+    "id": "Package17",
+    "dimensions": {
+      "w": 1,
+      "l": 2,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 72,
+    "weight": 7,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package18",
+    "dimensions": {
+      "w": 3,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 126,
+    "weight": 12,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package19",
+    "dimensions": {
+      "w": 2,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 108,
+    "weight": 10,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package20",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 68,
+    "weight": 6,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 1
+  }
+]

@@ -1,0 +1,282 @@
+[
+  {
+    "type": "truck",
+    "id": "Truck2",
+    "dimensions": {
+      "w": 12,
+      "h": 18,
+      "l": 6
+    },
+    "max_capacity": 520
+  },
+  {
+    "type": "package",
+    "id": "Package1",
+    "dimensions": {
+      "w": 1,
+      "l": 2,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 90,
+    "weight": 9,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package2",
+    "dimensions": {
+      "w": 2,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 84,
+    "weight": 8,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package3",
+    "dimensions": {
+      "w": 3,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 110,
+    "weight": 11,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 5
+  },
+  {
+    "type": "package",
+    "id": "Package4",
+    "dimensions": {
+      "w": 1,
+      "l": 3,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 100,
+    "weight": 10,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package5",
+    "dimensions": {
+      "w": 2,
+      "l": 2,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 160,
+    "weight": 15,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package6",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 4
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 78,
+    "weight": 7,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 6
+  },
+  {
+    "type": "package",
+    "id": "Package7",
+    "dimensions": {
+      "w": 2,
+      "l": 3,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 125,
+    "weight": 12,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package8",
+    "dimensions": {
+      "w": 1,
+      "l": 2,
+      "h": 3
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 140,
+    "weight": 14,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package9",
+    "dimensions": {
+      "w": 3,
+      "l": 2,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 135,
+    "weight": 13,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 5
+  },
+  {
+    "type": "package",
+    "id": "Package10",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 60,
+    "weight": 6,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 1
+  },
+  {
+    "type": "package",
+    "id": "Package11",
+    "dimensions": {
+      "w": 2,
+      "l": 2,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 95,
+    "weight": 9,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package12",
+    "dimensions": {
+      "w": 1,
+      "l": 3,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 88,
+    "weight": 8,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package13",
+    "dimensions": {
+      "w": 2,
+      "l": 1,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 120,
+    "weight": 12,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package14",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 3
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 102,
+    "weight": 10,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 5
+  },
+  {
+    "type": "package",
+    "id": "Package15",
+    "dimensions": {
+      "w": 3,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 146,
+    "weight": 14,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 3
+  }
+]
