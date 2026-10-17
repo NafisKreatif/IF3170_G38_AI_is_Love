@@ -6,11 +6,23 @@ class Position:
         self.y = y
         self.z = z
 
+    def __str__(self):
+        return f"({self.x},{self.y},{self.z})"
+
+    def copy(self):
+        return Position(self.x, self.y, self.z)
+
 class Dimensions:
     def __init__(self, width, length, height):
         self.width = width
         self.length = length
         self.height = height
+
+    def __str__(self):
+        return f"{self.width}x{self.length}x{self.height}"
+
+    def copy(self):
+        return Dimensions(self.width, self.length, self.height)
 
 class Orientation:
     def __init__(self, width_orientation = "x", length_orientation = "y", height_orientation = "z"):
@@ -18,11 +30,18 @@ class Orientation:
         self.length_orientation = length_orientation
         self.height_orientation = height_orientation
 
+    def __str__(self):
+        return f"(w->{self.width_orientation},l->{self.length_orientation},h->{self.height_orientation})"
+
+    def copy(self):
+        return Orientation(self.width_orientation, self.length_orientation, self.height_orientation)
+
 class TruckKun:
     id_count = 0
     def __init__(self, id = "truck_" + str(id_count), dimensions = Dimensions(10, 10, 10), max_capacity = 1000):
         self.id = id
         self.dimensions = dimensions
+        self.orientation = Orientation() # use the default
         self.max_capacity = max_capacity
 
         if id == "truck_" + str(self.id_count):
@@ -34,7 +53,7 @@ class LovePackage:
 
     def __init__(self, id = "package_" + str(id_count),
                  dimensions = Dimensions(10, 10, 10),
-                 orientation = Orientation("x", "y", "z"),
+                 orientation = Orientation(),
                  value = 10,
                  weight = 10,
                  is_fragile = False,
@@ -90,11 +109,20 @@ class IsekaiConfiguration():
     def get_package_truck(self, package: LovePackage) -> TruckKun:    
         return self.package_truck.get(package)
 
-    def get_package_position(self, package: LovePackage) -> Position:    
-            return self.package_position.get(package)
+    def get_package_position(self, package: LovePackage) -> Position:
+        position = self.package_position.get(package)
+        if position is None:
+            return None
+        else:    
+            return position.copy()
 
-    def get_package_orientation(self, package: LovePackage) -> Orientation:    
-            return self.package_orientation.get(package)
+    def get_package_orientation(self, package: LovePackage) -> Orientation:  
+        orientation = self.package_orientation.get(package)
+        if orientation is None:
+            return None
+        else:    
+            return orientation.copy()  
+    
     def package_is_outside_truck(self, package:LovePackage) -> bool:
         truck = self.get_package_truck(package)
 
@@ -134,6 +162,28 @@ class IsekaiConfiguration():
             if not valid: break
 
         return valid
+
+    def is_truck_valid(self, truck: TruckKun) -> bool:
+        valid = True
+
+        if (self.total_weight(truck) > truck.max_capacity):
+            valid = False
+
+        for package in self.isekai.packages:
+            if self.get_package_truck(package) is not truck:
+                continue
+            if self.package_is_outside_truck(package):
+                valid = False
+            if self.package_is_intersecting(package):
+                valid = False
+            if not self.package_is_supported(package):
+                valid = False
+            if package.is_fragile and self.package_is_supporting(package):
+                valid = False
+            if not valid: break
+
+        return valid
+
 
     def total_weight(self, truck: TruckKun):
         total = 0
@@ -231,6 +281,13 @@ class IsekaiConfiguration():
                 break
 
         return intersecting
+
+    def copy(self) -> IsekaiConfiguration:
+        config = IsekaiConfiguration(self.isekai)
+        config.package_truck = self.package_truck.copy()
+        config.package_position = self.package_position.copy()
+        config.package_orientation = self.package_orientation.copy()
+        return config
 
 def truck_from_obj(obj):
     if obj["type"] != "truck":
