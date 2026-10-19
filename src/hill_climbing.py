@@ -10,8 +10,8 @@ AXES = ("x", "y", "z")
 def love_size(package, orientation):
     dimensions = {
         orientation.width_orientation: package.dimensions.width,
-        orientation.length_orientation: package.dimensions.length,
         orientation.height_orientation: package.dimensions.height,
+        orientation.length_orientation: package.dimensions.length,
     }
     return dimensions["x"], dimensions["y"], dimensions["z"]
 
@@ -34,8 +34,8 @@ def will_it_work(truck, package, pos, orientation):
     return (
         pos.x >= 0 and pos.y >= 0 and pos.z >= 0
         and pos.x + x <= d.width
-        and pos.y + y <= d.length
-        and pos.z + z <= d.height
+        and pos.y + y <= d.height
+        and pos.z + z <= d.length
     )
 
 # hindarin state duplikat
@@ -51,7 +51,7 @@ def my_identity(state):
         p = state.get_package_position(package)
         o = state.get_package_orientation(package)
 
-        result.append((package.id, truck.id, p.x, p.y, p.z, o.width_orientation, o.height_orientation, o.length_orientation))
+        result.append((package.id, truck.id, p.x, p.y, p.z, o.width_orientation, o.height_orientation, o.length_orientation,))
 
     return tuple(result)
 
