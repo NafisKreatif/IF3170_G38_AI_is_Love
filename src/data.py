@@ -165,8 +165,8 @@ class IsekaiConfiguration:
             or bounds[0].y < 0
             or bounds[0].z < 0
             or bounds[1].x > truck.dimensions.width
-            or bounds[1].y > truck.dimensions.length
-            or bounds[1].z > truck.dimensions.height
+            or bounds[1].y > truck.dimensions.height
+            or bounds[1].z > truck.dimensions.length
         )
     
     def is_valid(self, debug=False) -> bool:
