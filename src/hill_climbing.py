@@ -101,7 +101,7 @@ def love_score(state):
 def generate_heroine(isekai, include_prob=0.5, rng = None):
     # initial config random
     if not 0 <= include_prob <= 1:
-        raise ValueError("include_prob must be between 0 and 1")
+        raise ValueError("probabilitas harus di antara 0 dan 1")
 
     rng = rng or random.Random()
     state = IsekaiConfiguration(isekai)
@@ -282,7 +282,7 @@ def climbing(initial, mode = "Steepest", max_iterations = 500, rng = None, detai
                 stop_reason = "sudah Local Optimum"
                 break
             if sideway_streak >= max_sideways:
-                stop_reason = "max sideway count"
+                stop_reason = "sideway limit tercapai"
                 break
             sideway_streak += 1
             sideway_count += 1
@@ -338,7 +338,7 @@ def random_restart_hc(isekai, max_restarts = 5, max_iterations = 500, include_pr
     history = []
     iterations_per_restart = []
     restart_value = []
-    stop_reason = "max restart count"
+    stop_reason = "restart limit tercapai"
 
     for i in range(max_restarts):
         initial_state = generate_heroine(isekai, include_prob=include_prob, rng=rng)
