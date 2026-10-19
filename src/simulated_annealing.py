@@ -7,7 +7,28 @@ from genetic_algorithm_v2 import *
 
 def random_successor(config: IsekaiConfiguration) -> IsekaiConfiguration:
 
-    successor = config.copy()
+    if isinstance(config, IsekaiOrder):
+        successor = config.copy()
+    else:
+        successor = IsekaiOrder(config.isekai)
+        for truck in config.isekai.trucks:
+            packages = [
+                package for package in config.isekai.packages
+                if config.get_package_truck(package) is truck
+            ]
+            packages.sort(key=lambda package: (
+                config.get_package_position(package).y,
+                config.get_package_position(package).z,
+                config.get_package_position(package).x,
+            ))
+            for order, package in enumerate(packages):
+                successor.configure_package(
+                    package,
+                    truck,
+                    config.get_package_position(package),
+                    config.get_package_orientation(package),
+                    order=order,
+                )
 
     match random.randint(0, 2):
         case 0: kesenggol(successor)
@@ -36,7 +57,6 @@ def exponent_schedule(T0: float = 100.0, alpha: float = 0.67, steps: int = 1000)
 
 def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration = None, max_iterations: int = 1000, record_every: int = 1) -> dict:
 
-    random.seed(67)
     start_time = time.perf_counter()
 
     if initial_state is not None:
@@ -45,11 +65,12 @@ def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration 
         current = ngasal(isekai)
 
     current_value = kesejahteraan(current)
+    current_fitness = current_value + kesengsaraan(current)
     initial_value = current_value
     initial_state = current.copy()
 
-    best_state = current.copy()
-    best_value = current_value
+    best_state = current.copy() if current.is_valid() else None
+    best_value = current_value if best_state is not None else None
 
     value_history = [current_value]
     temperature_history = [schedule(0) if max_iterations > 0 else 0.0]
@@ -73,25 +94,30 @@ def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration 
 
         next_state = random_successor(current)
         next_value = kesejahteraan(next_state)
+        next_fitness = next_value + kesengsaraan(next_state)
 
-        deltaE = next_value - current_value
+        deltaE = next_fitness - current_fitness
         prob = math.exp(deltaE / T) if deltaE <= 0 else 1.0
 
         accepted = False
         if deltaE > 0:
             current = next_state
             current_value = next_value
+            current_fitness = next_fitness
             accepted = True
         else:
             if random.random() < prob:
                 current = next_state
                 current_value = next_value
+                current_fitness = next_fitness
                 accepted = True
 
 
-        if current_value > best_value:
-            best_value = current_value
-            best_state = current.copy()
+        if current.is_valid():
+            valid_value = kesejahteraan(current, check_validity=True)
+            if best_state is None or valid_value > best_value:
+                best_value = valid_value
+                best_state = current.copy()
 
 
         if current_value == plateau_value:
@@ -117,7 +143,7 @@ def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration 
             accepted_history.append(accepted)
             stuck_history.append(stuck_count)
 
-    final_value = kesejahteraan(best_state)
+    final_value = best_value
 
     duration = time.perf_counter() - start_time
 

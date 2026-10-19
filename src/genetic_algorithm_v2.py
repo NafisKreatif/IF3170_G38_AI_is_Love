@@ -1,3 +1,4 @@
+from __future__ import annotations
 from data import *
 import random
 import math
@@ -347,6 +348,8 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     list_termakmur = []
     list_terbiasa = []
     list_perfect = []
+    list_objective_max = []
+    list_objective_avg = []
 
     the_perfect_world = IsekaiConfiguration(isekai)
     the_perfect_kesejahteraan = 0
@@ -389,6 +392,14 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         list_termakmur.append(termakmur)
         list_terbiasa.append(terbiasa) 
         list_perfect.append(the_perfect_kesejahteraan)
+        objective_values = [
+            kesejahteraan(rakyat, check_validity=True)
+            for rakyat in orde_lama
+        ]
+        list_objective_max.append(max(objective_values, default=0))
+        list_objective_avg.append(
+            sum(objective_values) / len(objective_values) if objective_values else 0.0
+        )
 
         if debug:
             print(f"Generation {i}:")
@@ -529,6 +540,14 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     list_termakmur.append(termakmur)
     list_terbiasa.append(terbiasa)
     list_perfect.append(the_perfect_kesejahteraan)
+    objective_values = [
+        kesejahteraan(rakyat, check_validity=True)
+        for rakyat in orde_lama
+    ]
+    list_objective_max.append(max(objective_values, default=0))
+    list_objective_avg.append(
+        sum(objective_values) / len(objective_values) if objective_values else 0.0
+    )
 
     if debug:
         print(f"Generation {generation}:")
@@ -546,6 +565,8 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         "max_value_history": list_termakmur,
         "avg_value_history": list_terbiasa,
         "min_value_history": list_termiskin,
+        "max_objective_history": list_objective_max,
+        "avg_objective_history": list_objective_avg,
         "iterations": generation,
         "populations": jumlah_penduduk,
         "duration": time.perf_counter() - start_time
