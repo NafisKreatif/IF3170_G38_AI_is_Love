@@ -1,7 +1,9 @@
 import math
 import random
+import time
 from data import *
-from genetic_algorithm import *
+from genetic_algorithm_v2 import *
+
 
 def random_successor(config: IsekaiConfiguration) -> IsekaiConfiguration:
 
@@ -32,7 +34,10 @@ def exponent_schedule(T0: float = 100.0, alpha: float = 0.67, steps: int = 1000)
     return schedule
 
 
-def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration = None, max_iterations: int = 1000) -> IsekaiConfiguration:
+def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration = None, max_iterations: int = 1000, record_every: int = 1) -> dict:
+
+    random.seed(67)
+    start_time = time.perf_counter()
 
     if initial_state is not None:
         current = initial_state.copy()
@@ -40,23 +45,95 @@ def post_honeymoon(isekai: Isekai, schedule, initial_state: IsekaiConfiguration 
         current = ngasal(isekai)
 
     current_value = kesejahteraan(current)
+    initial_value = current_value
+    initial_state = current.copy()
+
+    best_state = current.copy()
+    best_value = current_value
+
+    value_history = [current_value]
+    temperature_history = [schedule(0) if max_iterations > 0 else 0.0]
+    deltaE_history = [0.0]
+    acceptance_prob_history = [1.0]
+    accepted_history = [True]
+    stuck_history = [0]           # consecutive non-improving accepted steps
+    stuck_count = 0               # consecutive iterations with no improvement
+    local_optima_count = 0       
+
+    
+    PLATEAU_LEN = 67
+    plateau_value = current_value
+    plateau_len = 0
 
     for t in range(1, max_iterations + 1):
+
         T = schedule(t)
         if T == 0:
-            return current
+            break
 
         next_state = random_successor(current)
         next_value = kesejahteraan(next_state)
 
         deltaE = next_value - current_value
+        prob = math.exp(deltaE / T) if deltaE <= 0 else 1.0
 
+        accepted = False
         if deltaE > 0:
             current = next_state
             current_value = next_value
+            accepted = True
         else:
-            if random.random() < math.exp(deltaE / T):
+            if random.random() < prob:
                 current = next_state
                 current_value = next_value
+                accepted = True
 
-    return current
+
+        if current_value > best_value:
+            best_value = current_value
+            best_state = current.copy()
+
+
+        if current_value == plateau_value:
+            plateau_len += 1
+        else:
+            plateau_value = current_value
+            plateau_len = 0
+
+        if plateau_len >= PLATEAU_LEN:
+            stuck_count += 1
+        else:
+            stuck_count = 0
+
+        if plateau_len >= PLATEAU_LEN and accepted and deltaE < 0:
+            local_optima_count += 1
+
+        # record
+        if t % record_every == 0 or t == max_iterations:
+            value_history.append(current_value)
+            temperature_history.append(T)
+            deltaE_history.append(deltaE)
+            acceptance_prob_history.append(prob)
+            accepted_history.append(accepted)
+            stuck_history.append(stuck_count)
+
+    final_value = kesejahteraan(best_state)
+
+    duration = time.perf_counter() - start_time
+
+    return {
+        "initial_state": initial_state,
+        "final_state": best_state,
+        "initial_value": initial_value,
+        "final_value": final_value,
+        "value_history": value_history,
+        "temperature_history": temperature_history,
+        "deltaE_history": deltaE_history,
+        "acceptance_prob_history": acceptance_prob_history,
+        "accepted_history": accepted_history,
+        "stuck_history": stuck_history,
+        "local_optima_count": local_optima_count,
+        "iterations": len(value_history) - 1,
+        "max_iterations": max_iterations,
+        "duration": duration,
+    }
