@@ -369,7 +369,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
                 ks = kesejahteraan_rakyat[rakyat]
             total_kesejahteraan += ks
             if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
-                print("We have the best one:", rakyat, ks)
                 the_perfect_world = rakyat.copy()
                 the_perfect_kesejahteraan = ks
             if first:
@@ -485,7 +484,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         # Hasil yang betulan valid, ga cuma dari fitness
         for rakyat, ks in kesejahteraan_rakyat.items():
             if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
-                print("We have the best one:", rakyat, ks)
                 the_perfect_world = rakyat.copy()
                 the_perfect_kesejahteraan = ks
 
@@ -516,7 +514,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
             ks = kesejahteraan_rakyat[rakyat]
         total_kesejahteraan += ks
         if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
-            print("We have the best one:", rakyat, ks)
             the_perfect_world = rakyat.copy()
             the_perfect_kesejahteraan = ks
         if first:
