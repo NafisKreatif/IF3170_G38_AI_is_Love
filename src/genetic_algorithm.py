@@ -1,5 +1,6 @@
 from data import *
 import random
+import math
 
 def ngasal(isekai: Isekai) -> IsekaiConfiguration:
     config = IsekaiConfiguration(isekai)
@@ -112,10 +113,13 @@ def kelempar(config: IsekaiConfiguration, package: LovePackage = None):
             case "x": package_dimensions.width += package.dimensions.length
             case "y": package_dimensions.height += package.dimensions.length
             case "z": package_dimensions.length += package.dimensions.length
-        random_position = Position(random.randint(0, truck.dimensions.width - package_dimensions.width),
-                                   random.randint(0, truck.dimensions.height - package_dimensions.height),
-                                   random.randint(0, truck.dimensions.length - package_dimensions.length))
-        config.configure_package(package, truck, random_position, package.orientation)
+        if (truck.dimensions.width >= package_dimensions.width and
+            truck.dimensions.height >= package_dimensions.height and
+            truck.dimensions.length >= package_dimensions.length):
+            random_position = Position(random.randint(0, truck.dimensions.width - package_dimensions.width),
+                                    random.randint(0, truck.dimensions.height - package_dimensions.height),
+                                    random.randint(0, truck.dimensions.length - package_dimensions.length))
+            config.configure_package(package, truck, random_position, package.orientation)
     else:
         config.remove_package(package)
 
@@ -137,89 +141,149 @@ def kesejahteraan(config: IsekaiConfiguration):
                     total += package.value
     return total
 
+# penalty
+def kesengsaraan(config: IsekaiConfiguration):
+    total = 0
+    for truck in config.isekai.trucks:
+        if (config.total_weight(truck) > truck.max_capacity):
+            total -= config.total_weight(truck) - truck.max_capacity
+
+    total_value = 0
+    for package in config.isekai.packages:
+        total_value = package.value
+    avg_value = total_value // len(config.isekai.packages)
+
+    for package in config.isekai.packages:
+        if config.get_package_truck(package) is None:
+            continue
+        if config.package_is_outside_truck(package):
+            total += avg_value // 2
+        if config.package_is_intersecting(package):
+            total += avg_value // 2
+        if not config.package_is_supported(package):
+            total += avg_value // 2
+        if package.is_fragile and config.package_is_supporting(package):
+            total += avg_value // 2
+
+    return total
+
 # main function
-def dolan(isekai: Isekai, generation=1000, penduduk=100, mutate_peluang=0.05) -> IsekaiConfiguration:
-    list_wonge: list[IsekaiConfiguration] = []
-    for i in range(penduduk):
-        list_wonge.append(ngasal(isekai))
+def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05) -> IsekaiConfiguration:
+    orde_lama: list[IsekaiConfiguration] = []
+    for i in range(jumlah_penduduk):
+        orde_lama.append(ngasal(isekai))
 
     # Kosong
     the_perfect_world = IsekaiConfiguration(isekai)
+    the_perfect_kesejahteraan = 0
 
     for i in range(generation):
-        print(f"Generation {i}: ", kesejahteraan(the_perfect_world))
+        print(f"Generation {i}:", the_perfect_kesejahteraan)
 
         total_kesejahteraan = 0
-        list_kesejahteraan = []
-        for wonge in list_wonge:
-            ks = kesejahteraan(wonge)
-            list_kesejahteraan.append(ks)
+        kesejahteraan_rakyat = dict()
+
+        # kesejahteraan awal
+        first = True
+        for rakyat in orde_lama:
+            ks = kesejahteraan(rakyat) + kesengsaraan(rakyat)
+            kesejahteraan_rakyat[rakyat] = ks
             total_kesejahteraan += ks
-
-        persen_kesejahteraan = []
-        for ks in list_kesejahteraan:
-            if total_kesejahteraan > 0:
-                persen_kesejahteraan.append(ks / total_kesejahteraan)
+            # print(ks, total_kesejahteraan)
+            if first:
+                first = False
+                termiskin_lama = ks
             else:
-                persen_kesejahteraan.append(1 / len(list_kesejahteraan))
+                termiskin_lama = min(termiskin_lama, ks)
 
-        for k in range(penduduk):
-            random_pilih1 = random.random()
-            random_pilih2 = random.random()
+        if termiskin_lama <= 0:
+            total_kesejahteraan += (termiskin_lama + 1) * jumlah_penduduk
 
-            wong1: IsekaiConfiguration
-            wong2: IsekaiConfiguration
-            for j in range(penduduk):
-                if random_pilih1 < persen_kesejahteraan[j]:
-                    wong1 = list_wonge[j]
+        orde_baru = []
+        first = True
+        for _ in range(jumlah_penduduk):
+            rakyat1: IsekaiConfiguration
+            rakyat2: IsekaiConfiguration
+
+            random_pilih1 = random.randint(0, total_kesejahteraan - 1)
+            random_pilih2 = random.randint(0, total_kesejahteraan - 1)
+            for rakyat in orde_lama:
+                if random_pilih1 < kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1):
+                    rakyat1 = rakyat
                     break
-                random_pilih1 -= persen_kesejahteraan[j]
-            for j in range(penduduk):
-                if random_pilih2 < persen_kesejahteraan[j]:
-                    wong2 = list_wonge[j]
+                random_pilih1 -= kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1)
+            for rakyat in orde_lama:
+                if random_pilih2 < kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1):
+                    rakyat2 = rakyat
                     break
-                random_pilih2 -= persen_kesejahteraan[j]
+                random_pilih2 -= kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1)
 
-            bocah = kawin(wong1, wong2)
-            list_wonge.append(bocah[0])
-            list_wonge.append(bocah[1])
-            ks1 = kesejahteraan(bocah[0])
-            ks2 = kesejahteraan(bocah[1])
-            list_kesejahteraan.append(ks1)
-            list_kesejahteraan.append(ks2)
-            total_kesejahteraan += ks1 + ks2
-
-        for wonge in list_wonge:
-            if random.random() < mutate_peluang:
-                kelainan(wonge)
-
-        persen_kesejahteraan = []
-        for ks in list_kesejahteraan:
-            if total_kesejahteraan > 0:
-                persen_kesejahteraan.append(ks / total_kesejahteraan)
+            bocah = kawin(rakyat1, rakyat2)
+            orde_baru.append(bocah[0])
+            orde_baru.append(bocah[1])
+            kesejahteraan_rakyat[bocah[0]] = kesejahteraan(bocah[0]) + kesengsaraan(bocah[0])
+            kesejahteraan_rakyat[bocah[1]] = kesejahteraan(bocah[1]) + kesengsaraan(bocah[1])
+           
+        for bocah in orde_baru:
+            total_kesejahteraan += kesejahteraan_rakyat[bocah]
+            if first:
+                first = False
+                termiskin_baru = kesejahteraan_rakyat[bocah]
             else:
-                persen_kesejahteraan.append(1 / len(list_kesejahteraan))
+                termiskin_baru = min(termiskin_baru, kesejahteraan_rakyat[bocah])
 
-        wong_baru = []
-        for i in range(penduduk):
-            random_pilih = random.random()
-            for j in range(len(list_wonge)):
-                if random_pilih < persen_kesejahteraan[j]:
-                    wong_baru.append(list_wonge[j])
+        if termiskin_lama < termiskin_baru:
+            total_kesejahteraan += (termiskin_lama + 1) * (2 * jumlah_penduduk)
+        elif termiskin_baru <= 0:
+            total_kesejahteraan += (termiskin_baru + 1) * (3 * jumlah_penduduk) - (termiskin_lama + 1) * jumlah_penduduk
+        termiskin = min(termiskin_lama, termiskin_baru)
+
+        orde_lama.sort(key = lambda rakyat: kesejahteraan_rakyat[rakyat], reverse=True)
+        for i in range(math.ceil(persen_kaum_elit * len(orde_lama)), len(orde_lama)):
+            if random.random() < peluang_kelainan:
+                kelainan(orde_lama[i])
+
+        for i in range(len(orde_baru)):
+            if random.random() < peluang_kelainan:
+                kelainan(orde_baru[i])
+
+        orde_terbaru = []
+        for i in range(0, math.ceil(persen_kaum_elit * len(orde_lama))):
+            orde_terbaru.append(orde_lama[i])
+
+        while len(orde_terbaru) < jumlah_penduduk:
+            sudah_dipilih = False
+            random_pilih = random.randint(0, total_kesejahteraan - 1)
+            for rakyat in orde_lama:
+                if random_pilih < kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1):
+                    orde_terbaru.append(rakyat)
+                    sudah_dipilih = True
                     break
-                random_pilih -= persen_kesejahteraan[j]
+                random_pilih -= kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1)
+            if sudah_dipilih: continue
+            for rakyat in orde_baru:
+                if random_pilih < kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1):
+                    orde_terbaru.append(rakyat)
+                    break
+                random_pilih -= kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1)
 
-        list_wonge = wong_baru
-        for wong in list_wonge:
-            if wong.is_valid() and kesejahteraan(wong) > kesejahteraan(the_perfect_world):
-                the_perfect_world = wong.copy()
+        for rakyat in orde_terbaru:
+            if rakyat.is_valid() and kesejahteraan_rakyat[rakyat] > the_perfect_kesejahteraan:
+                the_perfect_world = rakyat
+                the_perfect_kesejahteraan = kesejahteraan_rakyat[rakyat]
+        orde_lama = orde_terbaru
 
-    print(f"Generation {generation}: ", kesejahteraan(the_perfect_world))
+    print(f"Generation {generation}:", the_perfect_kesejahteraan)
     return the_perfect_world
 
 
 
-# isekai = load_isekai_from_file("data/testcase_1.json")
-# result = dolan(isekai, generation=1000, penduduk=100, mutate_peluang=0.05)
+isekai = load_isekai_from_file("data/testcase_8.json")
+total_value = 0
+for package in isekai.packages:
+    total_value += package.value
+
+print("Max possible value:", total_value)
+result = dolan(isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05)
 
 # print(kesejahteraan(result))
