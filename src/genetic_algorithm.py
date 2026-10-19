@@ -389,8 +389,8 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         print(f" -> terbiasa =", terbiasa)
         print(f" -> termiskin =", termiskin)
         print(f" -> varietas =", len(kesejahteraan_rakyat))
-        
-    return  {
+
+    return {
         "initial_state": the_first_world,
         "final_state": the_perfect_world,
         "initial_value": the_first_kesejahteraan,
@@ -411,5 +411,5 @@ if __name__ == "__main__":
 
     result = dolan(isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.02, debug=True)
     print("Max possible value:", total_value)
-    print("Value akhir:", kesejahteraan(result))
-    print("Persen keberhasilan:", f"{round(kesejahteraan(result) / total_value * 100, 2)}%")
+    print("Value akhir:", kesejahteraan(result["final_state"]))
+    print("Persen keberhasilan:", f"{round(kesejahteraan(result["final_state"]) / total_value * 100, 2)}%")
