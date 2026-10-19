@@ -1,12 +1,61 @@
 from data import *
 import random
 import math
+import time
 
+# random inital state
 def ngasal(isekai: Isekai) -> IsekaiConfiguration:
     config = IsekaiConfiguration(isekai)
 
     for package in isekai.packages:
         kelempar(config, package)
+
+    order = dict[TruckKun, list]()
+
+    for truck in isekai.trucks:
+        order[truck] = []
+        for package in isekai.packages:
+            if config.get_package_truck(package) is truck:
+                order[truck].append(package)
+                if random.random() < 0.25:
+                    keguling(config, package)
+        random.shuffle(order[truck])    
+        for package in order[truck]:
+            position = config.get_package_position(package)
+            position.y = 0
+            for other_package in order[truck]:
+                if package == other_package: break
+                bound = config.calculate_bound(package)
+                other_bound = config.calculate_bound(other_package)
+                if not (bound[1].x <= other_bound[0].x
+                        or bound[0].x >= other_bound[1].x
+                        or bound[1].z <= other_bound[0].z
+                        or bound[0].z >= other_bound[1].z):
+                    position.y = max(position.y, other_bound[1].y)
+            config.set_package_position(package, position)
+
+    for package in isekai.packages:
+        if config.package_is_outside_truck(package) or package.is_fragile and config.package_is_supporting(package):
+            config.remove_package(package)
+
+    for truck in isekai.trucks:
+        for package in order[truck]:
+            if config.get_package_truck(package) is not truck:
+                continue
+            position = config.get_package_position(package)
+            position.y = 0
+            for other_package in order[truck]:
+                if package == other_package: break
+                if config.get_package_truck(other_package) is not truck:
+                    continue
+                bound = config.calculate_bound(package)
+                other_bound = config.calculate_bound(other_package)
+                if not (bound[1].x <= other_bound[0].x
+                        or bound[0].x >= other_bound[1].x
+                        or bound[1].z <= other_bound[0].z
+                        or bound[0].z >= other_bound[1].z):
+                    position.y = max(position.y, other_bound[1].y)
+            config.set_package_position(package, position)
 
     return config 
 
@@ -45,16 +94,20 @@ def kawin(config1: IsekaiConfiguration, config2: IsekaiConfiguration):
 def kesenggol(config: IsekaiConfiguration, package: LovePackage = None):
     if package is None:
         package = config.isekai.packages[random.randint(0, len(config.isekai.packages) - 1)]
-    position = config.get_package_position(package)
-
-    if position is None:
-        return
 
     truck = config.get_package_truck(package)
+    if truck is None:
+        return
 
-    position.x = random.randint(0, truck.dimensions.width)
-    position.y = random.randint(0, truck.dimensions.height)
-    position.z = random.randint(0, truck.dimensions.length)
+    package_dimensions = config.get_package_dimensions(package)
+
+    if (truck.dimensions.width >= package_dimensions.width and
+        truck.dimensions.height >= package_dimensions.height and
+        truck.dimensions.length >= package_dimensions.length):
+        random_position = Position(random.randint(0, truck.dimensions.width - package_dimensions.width),
+                                random.randint(0, truck.dimensions.height - package_dimensions.height),
+                                random.randint(0, truck.dimensions.length - package_dimensions.length))
+        config.set_package_position(package, random_position)
 
 # orientation mutation
 def keguling(config: IsekaiConfiguration, package: LovePackage = None):
@@ -78,6 +131,7 @@ def keguling(config: IsekaiConfiguration, package: LovePackage = None):
             temp = orientation.length_orientation
             orientation.length_orientation = orientation.height_orientation
             orientation.height_orientation = temp
+    config.set_package_orientation(package, orientation)   
 
 # menukar dua paket
 def ketukar(config: IsekaiConfiguration):
@@ -100,19 +154,7 @@ def kelempar(config: IsekaiConfiguration, package: LovePackage = None):
 
     if truck is None:
         truck = config.isekai.trucks[random.randint(0, len(config.isekai.trucks) - 1)]
-        package_dimensions = Dimensions(0, 0, 0)
-        match package.orientation.width_orientation:
-            case "x": package_dimensions.width += package.dimensions.width
-            case "y": package_dimensions.height += package.dimensions.width
-            case "z": package_dimensions.length += package.dimensions.width
-        match package.orientation.height_orientation:
-            case "x": package_dimensions.width += package.dimensions.height
-            case "y": package_dimensions.height += package.dimensions.height
-            case "z": package_dimensions.length += package.dimensions.height
-        match package.orientation.length_orientation:
-            case "x": package_dimensions.width += package.dimensions.length
-            case "y": package_dimensions.height += package.dimensions.length
-            case "z": package_dimensions.length += package.dimensions.length
+        package_dimensions = config.get_package_dimensions(package)
         if (truck.dimensions.width >= package_dimensions.width and
             truck.dimensions.height >= package_dimensions.height and
             truck.dimensions.length >= package_dimensions.length):
@@ -135,7 +177,7 @@ def kelainan(config: IsekaiConfiguration):
 def kesejahteraan(config: IsekaiConfiguration):
     total = 0
     for truck in config.isekai.trucks:
-        if config.is_truck_valid(truck):
+        # if config.is_truck_valid(truck):
             for package in config.isekai.packages:
                 if config.get_package_truck(package) is truck:
                     total += package.value
@@ -150,54 +192,86 @@ def kesengsaraan(config: IsekaiConfiguration):
 
     total_value = 0
     for package in config.isekai.packages:
-        total_value = package.value
+        total_value += package.value
     avg_value = total_value // len(config.isekai.packages)
 
     for package in config.isekai.packages:
         if config.get_package_truck(package) is None:
             continue
         if config.package_is_outside_truck(package):
-            total += avg_value // 2
+            total -= avg_value // 2
         if config.package_is_intersecting(package):
-            total += avg_value // 2
+            total -= avg_value // 2
         if not config.package_is_supported(package):
-            total += avg_value // 2
+            total -= avg_value // 2
         if package.is_fragile and config.package_is_supporting(package):
-            total += avg_value // 2
+            total -= avg_value // 2
 
     return total
 
 # main function
-def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05) -> IsekaiConfiguration:
+def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05, debug=False) -> dict:
+    start_time = time.perf_counter()
+    
     orde_lama: list[IsekaiConfiguration] = []
     for i in range(jumlah_penduduk):
         orde_lama.append(ngasal(isekai))
 
-    # Kosong
+    the_first_world: IsekaiConfiguration # best initial state
+    the_first_kesejahteraan = 0 # best initial value
+    the_perfect_world: IsekaiConfiguration # best final state
+    the_perfect_kesejahteraan = 0
+    list_termiskin = []
+    list_termakmur = []
+    list_terbiasa = []
+
     the_perfect_world = IsekaiConfiguration(isekai)
     the_perfect_kesejahteraan = 0
+    kesejahteraan_rakyat = dict[IsekaiConfiguration, int]()
 
     for i in range(generation):
-        print(f"Generation {i}:", the_perfect_kesejahteraan)
-
+        termiskin = 0
+        termakmur = 0
+        terbiasa = 0
         total_kesejahteraan = 0
-        kesejahteraan_rakyat = dict()
-
-        # kesejahteraan awal
+    
         first = True
         for rakyat in orde_lama:
-            ks = kesejahteraan(rakyat) + kesengsaraan(rakyat)
-            kesejahteraan_rakyat[rakyat] = ks
+            if rakyat not in kesejahteraan_rakyat:
+                ks = kesejahteraan(rakyat) + kesengsaraan(rakyat)
+                kesejahteraan_rakyat[rakyat] = ks
+            else:
+                ks = kesejahteraan_rakyat[rakyat]
             total_kesejahteraan += ks
-            # print(ks, total_kesejahteraan)
+            if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
+                the_perfect_world = rakyat
             if first:
                 first = False
-                termiskin_lama = ks
+                termiskin = ks
+                termakmur = ks
             else:
-                termiskin_lama = min(termiskin_lama, ks)
+                termiskin = min(termiskin, ks)
+                termakmur = max(termakmur, ks)
+        terbiasa = total_kesejahteraan / jumlah_penduduk
+        
+        if i == 0:
+            the_first_world = the_perfect_world
+            the_first_kesejahteraan = the_perfect_kesejahteraan
+    
+        list_termiskin.append(termiskin)
+        list_termakmur.append(termakmur)
+        list_terbiasa.append(terbiasa) 
 
+        if debug:
+            print(f"Generation {i}:")
+            print(f" -> termakmur =", termakmur)
+            print(f" -> terbiasa =", terbiasa)
+            print(f" -> termiskin =", termiskin)
+            print(f" -> varietas =", len(kesejahteraan_rakyat))
+
+        termiskin_lama = termiskin
         if termiskin_lama <= 0:
-            total_kesejahteraan += (termiskin_lama + 1) * jumlah_penduduk
+            total_kesejahteraan += (-termiskin_lama + 1) * jumlah_penduduk
 
         orde_baru = []
         first = True
@@ -208,15 +282,15 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
             random_pilih1 = random.randint(0, total_kesejahteraan - 1)
             random_pilih2 = random.randint(0, total_kesejahteraan - 1)
             for rakyat in orde_lama:
-                if random_pilih1 < kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1):
+                if random_pilih1 < kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1):
                     rakyat1 = rakyat
                     break
-                random_pilih1 -= kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1)
+                random_pilih1 -= kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1)
             for rakyat in orde_lama:
-                if random_pilih2 < kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1):
+                if random_pilih2 < kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1):
                     rakyat2 = rakyat
                     break
-                random_pilih2 -= kesejahteraan_rakyat[rakyat] + max(0, termiskin_lama + 1)
+                random_pilih2 -= kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1)
 
             bocah = kawin(rakyat1, rakyat2)
             orde_baru.append(bocah[0])
@@ -233,9 +307,9 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
                 termiskin_baru = min(termiskin_baru, kesejahteraan_rakyat[bocah])
 
         if termiskin_lama < termiskin_baru:
-            total_kesejahteraan += (termiskin_lama + 1) * (2 * jumlah_penduduk)
+            total_kesejahteraan += (-termiskin_lama + 1) * (2 * jumlah_penduduk)
         elif termiskin_baru <= 0:
-            total_kesejahteraan += (termiskin_baru + 1) * (3 * jumlah_penduduk) - (termiskin_lama + 1) * jumlah_penduduk
+            total_kesejahteraan += (-termiskin_baru + 1) * (3 * jumlah_penduduk) - (-termiskin_lama + 1) * jumlah_penduduk
         termiskin = min(termiskin_lama, termiskin_baru)
 
         orde_lama.sort(key = lambda rakyat: kesejahteraan_rakyat[rakyat], reverse=True)
@@ -267,23 +341,75 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
                     break
                 random_pilih -= kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1)
 
-        for rakyat in orde_terbaru:
-            if rakyat.is_valid() and kesejahteraan_rakyat[rakyat] > the_perfect_kesejahteraan:
+        for rakyat, ks in kesejahteraan_rakyat.items():
+            if ks > the_perfect_kesejahteraan and rakyat.is_valid():
                 the_perfect_world = rakyat
-                the_perfect_kesejahteraan = kesejahteraan_rakyat[rakyat]
+
+        rakyat_mati = []
+        for rakyat in kesejahteraan_rakyat.keys():
+            if rakyat not in orde_terbaru:
+                rakyat_mati.append(rakyat)
+
+        for rakyat in rakyat_mati:
+            kesejahteraan_rakyat.pop(rakyat)
+    
         orde_lama = orde_terbaru
 
-    print(f"Generation {generation}:", the_perfect_kesejahteraan)
-    return the_perfect_world
+    termiskin = 0
+    termakmur = 0
+    terbiasa = 0
+    total_kesejahteraan = 0
+
+    first = True
+    for rakyat in orde_lama:
+        if rakyat not in kesejahteraan_rakyat:
+            ks = kesejahteraan(rakyat) + kesengsaraan(rakyat)
+            kesejahteraan_rakyat[rakyat] = ks
+        else:
+            ks = kesejahteraan_rakyat[rakyat]
+        total_kesejahteraan += ks
+        if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
+            the_perfect_world = rakyat
+        if first:
+            first = False
+            termiskin = ks
+            termakmur = ks
+        else:
+            termiskin = min(termiskin, ks)
+            termakmur = max(termakmur, ks)
+    terbiasa = total_kesejahteraan / jumlah_penduduk
+
+    list_termiskin.append(termiskin)
+    list_termakmur.append(termakmur)
+    list_terbiasa.append(terbiasa)
+
+    if debug:
+        print(f"Generation {generation}:")
+        print(f" -> termakmur =", termakmur)
+        print(f" -> terbiasa =", terbiasa)
+        print(f" -> termiskin =", termiskin)
+        print(f" -> varietas =", len(kesejahteraan_rakyat))
+        
+    return  {
+        "initial_state": the_first_world,
+        "final_state": the_perfect_world,
+        "initial_value": the_first_kesejahteraan,
+        "final_value": the_perfect_kesejahteraan,
+        "max_value_history": list_termakmur,
+        "avg_value_history": list_terbiasa,
+        "min_value_history": list_termiskin,
+        "iterations": generation,
+        "duration": time.perf_counter() - start_time,
+    }
 
 
+if __name__ == "__main__":
+    isekai = load_isekai_from_file("data/2_trucks_50_packages.json")
+    total_value = 0
+    for package in isekai.packages:
+        total_value += package.value
 
-isekai = load_isekai_from_file("data/testcase_8.json")
-total_value = 0
-for package in isekai.packages:
-    total_value += package.value
-
-print("Max possible value:", total_value)
-result = dolan(isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05)
-
-# print(kesejahteraan(result))
+    result = dolan(isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.02, debug=True)
+    print("Max possible value:", total_value)
+    print("Value akhir:", kesejahteraan(result))
+    print("Persen keberhasilan:", f"{round(kesejahteraan(result) / total_value * 100, 2)}%")
