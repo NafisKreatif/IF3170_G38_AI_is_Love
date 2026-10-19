@@ -174,10 +174,10 @@ def kelainan(config: IsekaiConfiguration):
         case 3: kelempar(config)
 
 # objective function
-def kesejahteraan(config: IsekaiConfiguration):
+def kesejahteraan(config: IsekaiConfiguration, check_validity: bool = False):
     total = 0
     for truck in config.isekai.trucks:
-        # if config.is_truck_valid(truck):
+        if not check_validity or config.is_truck_valid(truck):
             for package in config.isekai.packages:
                 if config.get_package_truck(package) is truck:
                     total += package.value
@@ -210,7 +210,10 @@ def kesengsaraan(config: IsekaiConfiguration):
     return total
 
 # main function
-def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05, debug=False) -> dict:
+def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05, debug=False, seed:int=None) -> dict:
+    if seed is not None:
+        random.seed(seed)
+
     start_time = time.perf_counter()
     
     orde_lama: list[IsekaiConfiguration] = []
@@ -224,12 +227,14 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     list_termiskin = []
     list_termakmur = []
     list_terbiasa = []
+    list_perfect = []
 
     the_perfect_world = IsekaiConfiguration(isekai)
     the_perfect_kesejahteraan = 0
     kesejahteraan_rakyat = dict[IsekaiConfiguration, int]()
 
     for i in range(generation):
+        # Perhitungan statistik
         termiskin = 0
         termakmur = 0
         terbiasa = 0
@@ -244,7 +249,9 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
                 ks = kesejahteraan_rakyat[rakyat]
             total_kesejahteraan += ks
             if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
-                the_perfect_world = rakyat
+                print("We have the best one:", rakyat, ks)
+                the_perfect_world = rakyat.copy()
+                the_perfect_kesejahteraan = ks
             if first:
                 first = False
                 termiskin = ks
@@ -253,7 +260,8 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
                 termiskin = min(termiskin, ks)
                 termakmur = max(termakmur, ks)
         terbiasa = total_kesejahteraan / jumlah_penduduk
-        
+
+        # Buat initial state
         if i == 0:
             the_first_world = the_perfect_world
             the_first_kesejahteraan = the_perfect_kesejahteraan
@@ -261,6 +269,7 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         list_termiskin.append(termiskin)
         list_termakmur.append(termakmur)
         list_terbiasa.append(terbiasa) 
+        list_perfect.append(the_perfect_kesejahteraan)
 
         if debug:
             print(f"Generation {i}:")
@@ -269,12 +278,12 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
             print(f" -> termiskin =", termiskin)
             print(f" -> varietas =", len(kesejahteraan_rakyat))
 
-        termiskin_lama = termiskin
-        if termiskin_lama <= 0:
-            total_kesejahteraan += (-termiskin_lama + 1) * jumlah_penduduk
+        # Anggapannya seperti menggeser semua kesejahteraan biar tidak ada yang negatif dan nol
+        if termiskin <= 0:
+            total_kesejahteraan += (-termiskin + 1) * jumlah_penduduk
 
-        orde_baru = []
-        first = True
+        # Generate offspring
+        orde_baru = list[IsekaiConfiguration]()
         for _ in range(jumlah_penduduk):
             rakyat1: IsekaiConfiguration
             rakyat2: IsekaiConfiguration
@@ -282,69 +291,83 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
             random_pilih1 = random.randint(0, total_kesejahteraan - 1)
             random_pilih2 = random.randint(0, total_kesejahteraan - 1)
             for rakyat in orde_lama:
-                if random_pilih1 < kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1):
+                if random_pilih1 < kesejahteraan_rakyat[rakyat] + max(0, -termiskin + 1):
                     rakyat1 = rakyat
                     break
-                random_pilih1 -= kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1)
+                random_pilih1 -= kesejahteraan_rakyat[rakyat] + max(0, -termiskin + 1)
             for rakyat in orde_lama:
-                if random_pilih2 < kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1):
+                if random_pilih2 < kesejahteraan_rakyat[rakyat] + max(0, -termiskin + 1):
                     rakyat2 = rakyat
                     break
-                random_pilih2 -= kesejahteraan_rakyat[rakyat] + max(0, -termiskin_lama + 1)
+                random_pilih2 -= kesejahteraan_rakyat[rakyat] + max(0, -termiskin + 1)
 
             bocah = kawin(rakyat1, rakyat2)
             orde_baru.append(bocah[0])
             orde_baru.append(bocah[1])
-            kesejahteraan_rakyat[bocah[0]] = kesejahteraan(bocah[0]) + kesengsaraan(bocah[0])
-            kesejahteraan_rakyat[bocah[1]] = kesejahteraan(bocah[1]) + kesengsaraan(bocah[1])
-           
-        for bocah in orde_baru:
-            total_kesejahteraan += kesejahteraan_rakyat[bocah]
-            if first:
-                first = False
-                termiskin_baru = kesejahteraan_rakyat[bocah]
-            else:
-                termiskin_baru = min(termiskin_baru, kesejahteraan_rakyat[bocah])
 
-        if termiskin_lama < termiskin_baru:
-            total_kesejahteraan += (-termiskin_lama + 1) * (2 * jumlah_penduduk)
-        elif termiskin_baru <= 0:
-            total_kesejahteraan += (-termiskin_baru + 1) * (3 * jumlah_penduduk) - (-termiskin_lama + 1) * jumlah_penduduk
-        termiskin = min(termiskin_lama, termiskin_baru)
-
+        # Mutasi populasi lama dan offspring, kecuali kaum elit dari populasi lama
+        # Sekalian hitung ulang kesejahteraan populasi lama jika perlu
+        # Hitung juga kesejahteraan offspring karena belum
         orde_lama.sort(key = lambda rakyat: kesejahteraan_rakyat[rakyat], reverse=True)
         for i in range(math.ceil(persen_kaum_elit * len(orde_lama)), len(orde_lama)):
             if random.random() < peluang_kelainan:
                 kelainan(orde_lama[i])
-
+                kesejahteraan_rakyat[orde_lama[i]] = kesejahteraan(orde_lama[i]) + kesengsaraan(orde_lama[i])
         for i in range(len(orde_baru)):
             if random.random() < peluang_kelainan:
                 kelainan(orde_baru[i])
+            kesejahteraan_rakyat[orde_baru[i]] = kesejahteraan(orde_baru[i]) + kesengsaraan(orde_baru[i])
 
+        # Hitung ulang kesejahteraan, buat seleksi nanti
+        total_kesejahteraan = 0
+        first = True
+        for rakyat in orde_lama:
+            total_kesejahteraan += kesejahteraan_rakyat[rakyat]
+            if first:
+                first = False
+                termiskin = kesejahteraan_rakyat[rakyat]
+            else:
+                termiskin = min(termiskin, kesejahteraan_rakyat[rakyat])
+        for rakyat in orde_baru:
+            total_kesejahteraan += kesejahteraan_rakyat[rakyat]
+            if first:
+                first = False
+                termiskin = kesejahteraan_rakyat[rakyat]
+            else:
+                termiskin = min(termiskin, kesejahteraan_rakyat[rakyat])
+
+        # Anggapannya seperti menggeser semua kesejahteraan biar tidak ada yang negatif dan nol
+        if termiskin <= 0:
+            total_kesejahteraan += (-termiskin + 1) * 3 * jumlah_penduduk
+
+        # Seleksi dari populasi lama dan baru, kaum elit ngebayar biar langsung lolos seleksi
         orde_terbaru = []
         for i in range(0, math.ceil(persen_kaum_elit * len(orde_lama))):
             orde_terbaru.append(orde_lama[i])
-
         while len(orde_terbaru) < jumlah_penduduk:
-            sudah_dipilih = False
+            sudah_pilih = False
             random_pilih = random.randint(0, total_kesejahteraan - 1)
             for rakyat in orde_lama:
                 if random_pilih < kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1):
                     orde_terbaru.append(rakyat)
-                    sudah_dipilih = True
+                    sudah_pilih = True
                     break
                 random_pilih -= kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1)
-            if sudah_dipilih: continue
+            if sudah_pilih: continue
             for rakyat in orde_baru:
                 if random_pilih < kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1):
                     orde_terbaru.append(rakyat)
                     break
                 random_pilih -= kesejahteraan_rakyat[rakyat] + max(0, termiskin + 1)
 
+        # Hasil yang betulan valid, ga cuma dari fitness
         for rakyat, ks in kesejahteraan_rakyat.items():
-            if ks > the_perfect_kesejahteraan and rakyat.is_valid():
-                the_perfect_world = rakyat
+            if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
+                print("We have the best one:", rakyat, ks)
+                the_perfect_world = rakyat.copy()
+                the_perfect_kesejahteraan = ks
 
+        # Hapus konfigurasi yang ga masuk jadi generasi berikutnya
         rakyat_mati = []
         for rakyat in kesejahteraan_rakyat.keys():
             if rakyat not in orde_terbaru:
@@ -355,6 +378,7 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     
         orde_lama = orde_terbaru
 
+    # Hitung statistik akhir
     termiskin = 0
     termakmur = 0
     terbiasa = 0
@@ -369,7 +393,9 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
             ks = kesejahteraan_rakyat[rakyat]
         total_kesejahteraan += ks
         if rakyat.is_valid() and ks > the_perfect_kesejahteraan:
-            the_perfect_world = rakyat
+            print("We have the best one:", rakyat, ks)
+            the_perfect_world = rakyat.copy()
+            the_perfect_kesejahteraan = ks
         if first:
             first = False
             termiskin = ks
@@ -382,6 +408,7 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     list_termiskin.append(termiskin)
     list_termakmur.append(termakmur)
     list_terbiasa.append(terbiasa)
+    list_perfect.append(the_perfect_kesejahteraan)
 
     if debug:
         print(f"Generation {generation}:")
@@ -389,12 +416,13 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         print(f" -> terbiasa =", terbiasa)
         print(f" -> termiskin =", termiskin)
         print(f" -> varietas =", len(kesejahteraan_rakyat))
-
-    return {
+    
+    return  {
         "initial_state": the_first_world,
         "final_state": the_perfect_world,
         "initial_value": the_first_kesejahteraan,
         "final_value": the_perfect_kesejahteraan,
+        "max_valid_value_history": list_perfect,
         "max_value_history": list_termakmur,
         "avg_value_history": list_terbiasa,
         "min_value_history": list_termiskin,
@@ -402,7 +430,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         "populations": jumlah_penduduk,
         "duration": time.perf_counter() - start_time
     }
-
 
 if __name__ == "__main__":
     isekai = load_isekai_from_file("data/2_trucks_50_packages.json")
