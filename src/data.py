@@ -89,7 +89,7 @@ class Isekai:
         self.trucks = trucks
         self.packages = packages
         
-class IsekaiConfiguration():
+class IsekaiConfiguration:
     def __init__(self, isekai: Isekai):
         self.isekai = isekai
 
@@ -135,8 +135,8 @@ class IsekaiConfiguration():
 
     def get_package_dimensions(self, package: LovePackage) -> Dimensions:
         package_orientation = self.get_package_orientation(package)
-        if package_orientation == None:
-            return None
+        if package_orientation is None:
+            package_orientation = package.orientation
         package_dimensions = Dimensions(0, 0, 0)
         match package_orientation.width_orientation:
             case "x": package_dimensions.width += package.dimensions.width
@@ -274,19 +274,10 @@ class IsekaiConfiguration():
     def calculate_bound(self, package: LovePackage) -> list[Position]:
         first_point = self.get_package_position(package)
         other_point = first_point.copy()
-        orientation = self.get_package_orientation(package)
-        match orientation.width_orientation:
-            case "x": other_point.x += package.dimensions.width
-            case "y": other_point.y += package.dimensions.width
-            case "z": other_point.z += package.dimensions.width
-        match orientation.height_orientation:
-            case "x": other_point.x += package.dimensions.height
-            case "y": other_point.y += package.dimensions.height
-            case "z": other_point.z += package.dimensions.height
-        match orientation.length_orientation:
-            case "x": other_point.x += package.dimensions.length
-            case "y": other_point.y += package.dimensions.length
-            case "z": other_point.z += package.dimensions.length
+        package_dimensions = self.get_package_dimensions(package)
+        other_point.x += package_dimensions.width
+        other_point.y += package_dimensions.height
+        other_point.z += package_dimensions.length
         return [first_point, other_point]
         
     def package_is_intersecting(self, package: LovePackage, other_package: LovePackage = None) -> bool:
