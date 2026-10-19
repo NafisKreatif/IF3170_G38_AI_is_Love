@@ -26,7 +26,7 @@ class Dimensions:
         return Dimensions(self.width, self.length, self.height)
 
 class Orientation:
-    def __init__(self, width_orientation = "x", length_orientation = "y", height_orientation = "z"):
+    def __init__(self, width_orientation = "x", length_orientation = "z", height_orientation = "y"):
         self.width_orientation = width_orientation
         self.length_orientation = length_orientation
         self.height_orientation = height_orientation
@@ -47,7 +47,21 @@ class TruckKun:
 
         if id == "truck_" + str(self.id_count):
             TruckKun.id_count += 1
-            
+
+    def oriented_dimentions(self) -> Dimensions:
+        oriented_dimensions = Dimensions(0, 0, 0)
+        match self.orientation.width_orientation:
+            case "x": oriented_dimensions.width += self.dimensions.width
+            case "y": oriented_dimensions.height += self.dimensions.width
+            case "z": oriented_dimensions.length += self.dimensions.width
+        match self.orientation.height_orientation:
+            case "x": oriented_dimensions.width += self.dimensions.height
+            case "y": oriented_dimensions.height += self.dimensions.height
+            case "z": oriented_dimensions.length += self.dimensions.height
+        match self.orientation.length_orientation:
+            case "x": oriented_dimensions.width += self.dimensions.length
+            case "y": oriented_dimensions.height += self.dimensions.length
+            case "z": oriented_dimensions.length += self.dimensions.length
             
 class LovePackage:
     id_count = 0
@@ -118,6 +132,25 @@ class IsekaiConfiguration():
             return None
         else:    
             return orientation.copy()  
+
+    def get_package_dimensions(self, package: LovePackage) -> Dimensions:
+        package_orientation = self.get_package_orientation(package)
+        if package_orientation == None:
+            return None
+        package_dimensions = Dimensions(0, 0, 0)
+        match package_orientation.width_orientation:
+            case "x": package_dimensions.width += package.dimensions.width
+            case "y": package_dimensions.height += package.dimensions.width
+            case "z": package_dimensions.length += package.dimensions.width
+        match package_orientation.height_orientation:
+            case "x": package_dimensions.width += package.dimensions.height
+            case "y": package_dimensions.height += package.dimensions.height
+            case "z": package_dimensions.length += package.dimensions.height
+        match package_orientation.length_orientation:
+            case "x": package_dimensions.width += package.dimensions.length
+            case "y": package_dimensions.height += package.dimensions.length
+            case "z": package_dimensions.length += package.dimensions.length
+        return package_dimensions
     
     def package_is_outside_truck(self, package:LovePackage) -> bool:
         truck = self.get_package_truck(package)
@@ -136,11 +169,12 @@ class IsekaiConfiguration():
             or bounds[1].z > truck.dimensions.height
         )
     
-    def is_valid(self) -> bool:
+    def is_valid(self, debug=False) -> bool:
         valid = True
 
         for truck in self.isekai.trucks:
             if (self.total_weight(truck) > truck.max_capacity):
+                if debug: print(truck.id, "has too much weight")
                 valid = False
             if not valid: break
 
@@ -148,12 +182,16 @@ class IsekaiConfiguration():
             if self.get_package_truck(package) is None:
                 continue
             if self.package_is_outside_truck(package):
+                if debug: print(package.id, "is outside truck")
                 valid = False
             if self.package_is_intersecting(package):
+                if debug: print(package.id, "is intersecting")
                 valid = False
             if not self.package_is_supported(package):
+                if debug: print(package.id, "is not supported")
                 valid = False
             if package.is_fragile and self.package_is_supporting(package):
+                if debug: print(package.id, "is destroyed")
                 valid = False
             if not valid: break
 
@@ -193,7 +231,7 @@ class IsekaiConfiguration():
             return True
         
         bounds = self.calculate_bound(package)
-        if bounds[0].z == 0:
+        if bounds[0].y == 0:
             return True
 
         for other_package in self.isekai.packages:
@@ -205,10 +243,10 @@ class IsekaiConfiguration():
             intersecting_area = not (
                 bounds[1].x <= other_bounds[0].x
                 or bounds[0].x >= other_bounds[1].x
-                or bounds[1].y <= other_bounds[0].y
-                or bounds[0].y >= other_bounds[1].y
+                or bounds[1].z <= other_bounds[0].z
+                or bounds[0].z >= other_bounds[1].z
             )
-            if intersecting_area and bounds[0].z == other_bounds[1].z:
+            if intersecting_area and bounds[0].y == other_bounds[1].y:
                 return True
         
         return False
@@ -226,16 +264,16 @@ class IsekaiConfiguration():
             other_bounds = self.calculate_bound(other_package)
             intersecting_area = not (bounds[1].x <= other_bounds[0].x
                                     or bounds[0].x >= other_bounds[1].x
-                                    or bounds[1].y <= other_bounds[0].y
-                                    or bounds[0].y >= other_bounds[1].y)
-            if intersecting_area and bounds[1].z == other_bounds[0].z:
+                                    or bounds[1].z <= other_bounds[0].z
+                                    or bounds[0].z >= other_bounds[1].z)
+            if intersecting_area and bounds[1].y == other_bounds[0].y:
                 return True
         
         return False
     
     def calculate_bound(self, package: LovePackage) -> list[Position]:
         first_point = self.get_package_position(package)
-        other_point = Position(first_point.x, first_point.y, first_point.z)
+        other_point = first_point.copy()
         orientation = self.get_package_orientation(package)
         match orientation.width_orientation:
             case "x": other_point.x += package.dimensions.width
