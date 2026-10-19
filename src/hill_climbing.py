@@ -10,8 +10,8 @@ AXES = ("x", "y", "z")
 def love_size(package, orientation):
     dimensions = {
         orientation.width_orientation: package.dimensions.width,
-        orientation.length_orientation: package.dimensions.length,
         orientation.height_orientation: package.dimensions.height,
+        orientation.length_orientation: package.dimensions.length,
     }
     return dimensions["x"], dimensions["y"], dimensions["z"]
 
@@ -34,8 +34,8 @@ def will_it_work(truck, package, pos, orientation):
     return (
         pos.x >= 0 and pos.y >= 0 and pos.z >= 0
         and pos.x + x <= d.width
-        and pos.y + y <= d.length
-        and pos.z + z <= d.height
+        and pos.y + y <= d.height
+        and pos.z + z <= d.length
     )
 
 # hindarin state duplikat
@@ -51,7 +51,7 @@ def my_identity(state):
         p = state.get_package_position(package)
         o = state.get_package_orientation(package)
 
-        result.append((package.id, truck.id, p.x, p.y, p.z, o.width_orientation, o.height_orientation, o.length_orientation))
+        result.append((package.id, truck.id, p.x, p.y, p.z, o.width_orientation, o.height_orientation, o.length_orientation,))
 
     return tuple(result)
 
@@ -235,34 +235,41 @@ def get_childhood_neighbors(state):
 
     return neighbors
 
-def hill_climbing(initial, max_sideways = 20, max_iterations = 500, rng = None, reset_sideways_on_improve=True, detail=False):
-    # Steepest Ascent HC + Sideway
-    if max_sideways < 0 or max_iterations < 0:
-        raise ValueError("Limit tidak boleh negatif")
+def total_value(isekai):
+    return sum(p.value for p in isekai.packages)
 
+def climbing(initial, mode = "Steepest", max_iterations = 500, rng = None, detail = False, max_sideways = 0, reset_sideways_on_improve = True, isekai = None):
+    if mode not in ("Steepest", "Stochastic"):
+        raise ValueError("Mode harus 'Steepest' atau 'Stochastic'")
+    if max_iterations < 0 or max_sideways < 0:
+        raise ValueError("Limit tidak boleh negatif")
     if not initial.is_valid():
         raise ValueError("Initial state tidak valid")
 
     rng = rng or random.Random()
+    isekai = isekai or initial.isekai
     start_time = time.perf_counter()
+    upper_bound = total_value(isekai)
     current = initial.copy()
-    initial_score = current_score = love_score(current)
+    current_score = initial_score = love_score(current)
+    our_history = [current_score]
 
-    history = [current_score]
-    visited = {my_identity(current)}
+    visited = {my_identity(current)} if max_sideways > 0 else None
+
     sideway_streak = sideway_count = 0
     stop_reason = "max iteration count"
 
     for iteration in range(max_iterations):
-        neighbors = [
-            n for n in get_childhood_neighbors(current)
-            if my_identity(n) not in visited
-        ]
+        if current_score >= upper_bound:
+            stop_reason = "Semua paket sudah masuk truck"
+            break
 
+        neighbors = get_childhood_neighbors(current)
+        if visited is not None:
+            neighbors = [n for n in neighbors if my_identity(n) not in visited]
         if not neighbors:
             stop_reason = "no more neighbors"
             break
-
         scored = [(love_score(n), n) for n in neighbors]
         best_score = max(score for score, _ in scored)
 
@@ -271,44 +278,116 @@ def hill_climbing(initial, max_sideways = 20, max_iterations = 500, rng = None, 
             break
 
         if best_score == current_score:
+            if max_sideways == 0:
+                stop_reason = "sudah Local Optimum"
+                break
             if sideway_streak >= max_sideways:
                 stop_reason = "max sideway count"
                 break
-
             sideway_streak += 1
             sideway_count += 1
-        elif reset_sideways_on_improve:
-            sideway_streak = 0
+            candidates = [n for score, n in scored if score == best_score]
 
-        current = rng.choice([
-            n for score, n in scored if score == best_score
-        ])
-        current_score = best_score
-        visited.add(my_identity(current))
-        history.append(current_score)
+        else:
+            if reset_sideways_on_improve:
+                sideway_streak = 0
+            if mode == "Steepest":
+                candidates = [n for score, n in scored if score == best_score]
+            else:
+                candidates = [n for score, n in scored if score > current_score]
 
-        if detail:
+        current = rng.choice(candidates)
+        current_score = love_score(current)
+        if visited is not None:
+            visited.add(my_identity(current))
+        our_history.append(current_score)
+
+        if detail:  
             print(f"Iterasi {iteration + 1}: "  f"score={current_score} (sideways={sideway_streak})")
 
     return {
-        "initial_state": initial,
-        "final_state": current,
-        "initial_value": initial_score,
-        "final_value": current_score,
-        "history": history,
-        "iterations": len(history) - 1,
-        "sideway_count": sideway_count,
-        "max_sideways": max_sideways,
-        "stop_reason": stop_reason,
-        "duration": time.perf_counter() - start_time,
-    }
+            "initial_state": initial,
+            "final_state": current,
+            "initial_value": initial_score,
+            "final_value": current_score,
+            "history": our_history,
+            "iterations": len(our_history) - 1,
+            "sideway_count": sideway_count,
+            "max_sideways": max_sideways,
+            "stop_reason": stop_reason,
+            "duration": time.perf_counter() - start_time,
+        }
 
-def run_hill_climbing(isekai, max_sideways=20, max_iterations=500, include_prob=0.5, seed=None, detail=False):
+def steepest_hill_climbing(initial, max_iterations = 500, rng = None, detail = False):
+    return climbing(initial, "Steepest", max_iterations, rng, detail)
+
+def stochastic_hill_climbing(initial, max_iterations = 500, rng = None, detail = False):
+    return climbing(initial, "Stochastic", max_iterations, rng, detail)
+
+def sideway_hill_climbing(initial, max_sideways = 20, max_iterations = 500, rng = None, reset_sideways_on_improve=True, detail=False):
+    return climbing(initial, "Steepest", max_iterations, rng, detail, max_sideways, reset_sideways_on_improve)
+
+def random_restart_hc(isekai, max_restarts = 5, max_iterations = 500, include_prob = 0.5, mode = "Steepest",max_sideways = 0, rng = None, detail=False):
+    if max_restarts < 1:
+        raise ValueError("max_restarts harus >= 1")
+    
+    rng = rng or random.Random()
+    upper_bound = total_value(isekai)
+    start_time = time.perf_counter()
+    best_state = None
+    history = []
+    iterations_per_restart = []
+    restart_value = []
+    stop_reason = "max restart count"
+
+    for i in range(max_restarts):
+        initial_state = generate_heroine(isekai, include_prob=include_prob, rng=rng)
+        result = climbing(initial_state, mode, max_iterations, rng, detail, max_sideways)
+        history.extend(result["history"])
+        iterations_per_restart.append(result["iterations"])
+        restart_value.append(result["final_value"])
+
+        if best_state is None or result["final_value"] > best_state["final_value"]:
+            best_state = result
+        if best_state["final_value"] >= upper_bound:
+            stop_reason = "Semua paket sudah masuk di Truck"
+            break
+
+    return {
+            "initial_state": best_state["initial_state"],
+            "final_state": best_state["final_state"],
+            "initial_value": best_state["initial_value"],
+            "final_value": best_state["final_value"],
+            "history": history,
+            "iterations": sum(iterations_per_restart),
+            "restarts": len(iterations_per_restart),
+            "max_restarts": max_restarts,
+            "iterations_per_restart": iterations_per_restart,
+            "restart_value": restart_value,
+            "stop_reason": stop_reason,
+            "duration": time.perf_counter() - start_time,
+        }
+
+def run_steepest_hill_climbing(isekai, max_iterations=500, include_prob=0.5, seed=None, detail=False):
     rng = random.Random(seed)
-    initial_state = generate_heroine(isekai, include_prob=include_prob, rng=rng)
-    return hill_climbing(initial_state, max_sideways=max_sideways, max_iterations=max_iterations, rng=rng, detail=detail)
+    initial_state = generate_heroine(isekai, include_prob = include_prob, rng = rng)
+    return steepest_hill_climbing(initial_state, max_iterations, rng , detail)
 
+def run_stochastic_hill_climbing(isekai, max_iterations=500, include_prob=0.5, seed=None, detail=False):
+    rng = random.Random(seed)
+    initial_state = generate_heroine(isekai, include_prob = include_prob, rng = rng)
+    return stochastic_hill_climbing(initial_state, max_iterations, rng , detail)
+
+def run_sideway_hill_climbing(isekai, max_sideways=20, max_iterations=500, include_prob=0.5, seed=None, detail=False):
+    rng = random.Random(seed)
+    initial_state = generate_heroine(isekai, include_prob = include_prob, rng = rng)
+    return sideway_hill_climbing(initial_state, max_sideways=max_sideways, max_iterations=max_iterations, rng=rng, detail=detail)
+
+def run_random_restart_hc(isekai, max_restarts = 5, max_iterations = 500, include_prob = 0.5, seed = None, detail = False):
+    return random_restart_hc(isekai, max_restarts, max_iterations, include_prob, "Steepest", 0, random.Random(seed), detail)
+
+#contoh:
 # isekai = load_isekai_from_file("../data/testcase_1.json")
-# result = run_hill_climbing(isekai, max_sideways=20, max_iterations=500, seed=42)
+# result = run_sideway_hill_climbing(isekai, max_sideways=20, max_iterations=500, seed=42)
 
 # print(result["final_value"])
