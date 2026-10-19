@@ -1,0 +1,292 @@
+[
+  {
+    "type": "truck",
+    "id": "Truck7A",
+    "dimensions": {
+      "w": 55,
+      "h": 45,
+      "l": 40
+    },
+    "max_capacity": 5000
+  },
+  {
+    "type": "truck",
+    "id": "Truck7B",
+    "dimensions": {
+      "w": 85,
+      "h": 65,
+      "l": 55
+    },
+    "max_capacity": 8500
+  },
+  {
+    "type": "package",
+    "id": "Package1",
+    "dimensions": {
+      "w": 48,
+      "l": 38,
+      "h": 30
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 1000,
+    "weight": 820,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 8
+  },
+  {
+    "type": "package",
+    "id": "Package2",
+    "dimensions": {
+      "w": 4,
+      "l": 3,
+      "h": 2
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 35,
+    "weight": 3,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 1
+  },
+  {
+    "type": "package",
+    "id": "Package3",
+    "dimensions": {
+      "w": 77,
+      "l": 48,
+      "h": 42
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 1800,
+    "weight": 1600,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 11
+  },
+  {
+    "type": "package",
+    "id": "Package4",
+    "dimensions": {
+      "w": 12,
+      "l": 36,
+      "h": 22
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 390,
+    "weight": 320,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 4
+  },
+  {
+    "type": "package",
+    "id": "Package5",
+    "dimensions": {
+      "w": 43,
+      "l": 28,
+      "h": 52
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 950,
+    "weight": 780,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 9
+  },
+  {
+    "type": "package",
+    "id": "Package6",
+    "dimensions": {
+      "w": 2,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 12,
+    "weight": 1,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 1
+  },
+  {
+    "type": "package",
+    "id": "Package7",
+    "dimensions": {
+      "w": 68,
+      "l": 50,
+      "h": 34
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 1450,
+    "weight": 1250,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 7
+  },
+  {
+    "type": "package",
+    "id": "Package8",
+    "dimensions": {
+      "w": 25,
+      "l": 9,
+      "h": 8
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 205,
+    "weight": 115,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 3
+  },
+  {
+    "type": "package",
+    "id": "Package9",
+    "dimensions": {
+      "w": 35,
+      "l": 32,
+      "h": 24
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 720,
+    "weight": 580,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 6
+  },
+  {
+    "type": "package",
+    "id": "Package10",
+    "dimensions": {
+      "w": 8,
+      "l": 12,
+      "h": 10
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 95,
+    "weight": 38,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 2
+  },
+  {
+    "type": "package",
+    "id": "Package11",
+    "dimensions": {
+      "w": 54,
+      "l": 40,
+      "h": 29
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 1250,
+    "weight": 1080,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 8
+  },
+  {
+    "type": "package",
+    "id": "Package12",
+    "dimensions": {
+      "w": 16,
+      "l": 45,
+      "h": 33
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 660,
+    "weight": 510,
+    "is_fragile": true,
+    "estimated_time_of_arrival": 10
+  },
+  {
+    "type": "package",
+    "id": "Package13",
+    "dimensions": {
+      "w": 1,
+      "l": 1,
+      "h": 1
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 8,
+    "weight": 1,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 1
+  },
+  {
+    "type": "package",
+    "id": "Package14",
+    "dimensions": {
+      "w": 80,
+      "l": 24,
+      "h": 58
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 1700,
+    "weight": 1450,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 12
+  },
+  {
+    "type": "package",
+    "id": "Package15",
+    "dimensions": {
+      "w": 30,
+      "l": 18,
+      "h": 14
+    },
+    "orientation": {
+      "w": "x",
+      "l": "y",
+      "h": "z"
+    },
+    "value": 310,
+    "weight": 230,
+    "is_fragile": false,
+    "estimated_time_of_arrival": 5
+  }
+]
