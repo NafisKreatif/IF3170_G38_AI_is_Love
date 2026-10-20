@@ -7,7 +7,7 @@
       "l": 7,
       "h": 6
     },
-    "max_capacity": 500
+    "max_capacity": 400
   },
   {
     "type": "truck",
@@ -27,7 +27,7 @@
       "l": 3,
       "h": 2
     },
-    "max_capacity": 650
+    "max_capacity": 100
   },
   {
     "type": "package",
