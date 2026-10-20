@@ -545,9 +545,9 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         "initial_value": the_first_kesejahteraan,
         "final_value": the_perfect_kesejahteraan,
         "best_value_history": list_perfect,
-        "max_value_history": list_termakmur,
-        "avg_value_history": list_terbiasa,
-        "min_value_history": list_termiskin,
+        "max_fitness_history": list_termakmur,
+        "avg_fitness_history": list_terbiasa,
+        "min_fitness_history": list_termiskin,
         "iterations": generation,
         "populations": jumlah_penduduk,
         "duration": time.perf_counter() - start_time
