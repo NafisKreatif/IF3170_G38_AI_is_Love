@@ -3,9 +3,9 @@
     "type": "truck",
     "id": "Truck8",
     "dimensions": {
-      "w": 5,
+      "w": 2,
       "h": 5,
-      "l": 5
+      "l": 3
     },
     "max_capacity": 500
   },

@@ -238,7 +238,7 @@ def save_state_comparison(
         "camera": {"eye": {"x": 1.6, "y": 1.4, "z": 1.6}},
     }
     figure.update_layout(
-        title="Initial state",
+        # title="Initial state", 
         scene=scene,
         height=680,
         margin={"l": 0, "r": 0, "t": 100, "b": 0},
