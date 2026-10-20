@@ -124,6 +124,7 @@ def _add_configuration(fig, isekai, state, column):
                 f"Weight: {package.weight}<br>"
                 f"Position: ({position.x}, {position.y}, {position.z})<br>"
                 f"Size: ({dimensions.width}, {dimensions.height}, {dimensions.length})"
+                f"Fragile: {package.is_fragile}<br>"
             )
             fig.add_trace(
                 _box_mesh(
