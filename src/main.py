@@ -165,30 +165,32 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path)
         print(f"Alasan berhenti : {stop_reason}")
 
     with open(output_path, "w") as output_file:
-        output_file.write("\n===== Ringkasan hasil =====")
-        output_file.write(f"Algoritma       : {ALGORITHM_LABELS[result['algorithm']]}")
-        output_file.write(f"Testcase        : {args.testcase}")
+        output_file.write("\n===== Ringkasan hasil =====\n")
+        output_file.write(f"Algoritma       : {ALGORITHM_LABELS[result['algorithm']]}\n")
+        output_file.write(f"Testcase        : {args.testcase}\n")
         if result["algorithm"] == "hc":
-            output_file.write(f"Mode HC         : {args.hc_mode.replace('-', ' ').title()}")
+            output_file.write(f"Mode HC         : {args.hc_mode.replace('-', ' ').title()}\n")
             if args.hc_mode == "random-restart":
-                output_file.write(f"Jumlah restart  : {result['raw_result'].get('restarts', 0)}/{args.restarts}")
-        elif result["algorithm"] in ("ga", "ga2"):
-            output_file.write(f"Ukuran populasi : {args.population}")
-        output_file.write(f"Nilai terbaik yang mungkin : {result['raw_result'].get('max_value')}")
-        output_file.write(f"Nilai awal      : {result['initial_value']}")
-        output_file.write(f"Nilai akhir     : {result['final_value']}")
-        output_file.write(f"State akhir     : {'valid' if valid else 'tidak ada solusi valid'}")
+                output_file.write(f"Jumlah restart  : {result['raw_result'].get('restarts', 0)}/{args.restarts}\n")
+        elif result["algorithm"] in ("ga", "ga2\n"):
+            output_file.write(f"Ukuran populasi : {args.population}\n")
+        output_file.write(f"Nilai terbaik yang mungkin : {result['raw_result'].get('max_value')}\n")
+        output_file.write(f"Nilai awal      : {result['initial_value']}\n")
+        output_file.write(f"Nilai akhir     : {result['final_value']}\n")
+        output_file.write(f"State akhir     : {'valid' if valid else 'tidak ada solusi valid'}\n")
         if result["algorithm"] == "hc" and args.hc_mode == "random-restart":
             output_file.write(
                 f"Iterasi total    : {result['iterations']} "
-                f"(maks. {args.iterations} per restart)"
+                f"(maks. {args.iterations} per restart)\n"
             )
         else:
-            output_file.write(f"Iterasi/generasi: {result['iterations']}/{args.iterations}")
-        output_file.write(f"Durasi          : {result['duration']:.3f} detik")
+            output_file.write(f"Iterasi/generasi: {result['iterations']}/{args.iterations}\n")
+        output_file.write(f"Durasi          : {result['duration']:.3f} detik\n")
 
         if stop_reason:
-            output_file.write(f"Alasan berhenti : {stop_reason}")
+            output_file.write(f"Alasan berhenti : {stop_reason}\n")
+
+        print(f"Output disimpan: \"{output_path}\"\n")
 
 
 def plot_history(result: dict[str, Any], output_path: Path) -> None:
@@ -239,7 +241,7 @@ def plot_history(result: dict[str, Any], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output_path, dpi=150)
     plt.close(fig)
-    print(f"Grafik riwayat disimpan: {output_path}")
+    print(f"Grafik riwayat disimpan: \"{output_path}\"")
 
 
 def parse_args() -> argparse.Namespace:
@@ -315,7 +317,7 @@ def main() -> None:
             output_path,
             run_summary=result,
         )
-        print(f"Visualisasi 3D disimpan: {saved_path}")
+        print(f"Visualisasi 3D disimpan: \"{saved_path}\"")
     else:
         print("Visualisasi 3D dilewati karena tidak ada state akhir yang valid.")
 
