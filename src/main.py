@@ -135,7 +135,7 @@ def run_selected_algorithm(args: argparse.Namespace, isekai) -> dict[str, Any]:
     return normalize_result(args.algorithm, result)
 
 
-def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path) -> None:
+def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path: Path) -> None:
     final_state = result["final_state"]
     valid = final_state is not None and final_state.is_valid()
     print("\n===== Ringkasan hasil =====")
@@ -164,6 +164,7 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path)
     if stop_reason:
         print(f"Alasan berhenti : {stop_reason}")
 
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as output_file:
         output_file.write("\n===== Ringkasan hasil =====\n")
         output_file.write(f"Algoritma       : {ALGORITHM_LABELS[result['algorithm']]}\n")
