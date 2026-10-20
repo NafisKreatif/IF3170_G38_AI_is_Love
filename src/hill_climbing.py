@@ -139,16 +139,17 @@ def generate_heroine(isekai, include_prob=0.5, rng = None):
             break
     return state
 
-# semua neighbor yang mungkin
-def get_childhood_neighbors(state):
-    neighbors = []
+# Semua neighbor yang mungkin, diproduksi satu per satu agar HC tidak nyimpan seluruh konfigurasi kandidat sekaligus.
+def iter_childhood_neighbors(state):
     seen = {my_identity(state)}
 
     def add(candidate):
         key = my_identity(candidate)
         if key not in seen and candidate.is_valid():
             seen.add(key)
-            neighbors.append(candidate)
+            return candidate
+        return None
+
     packages = state.isekai.packages
 
     for package in packages:
@@ -162,7 +163,9 @@ def get_childhood_neighbors(state):
             base = state
 
         if old_truck is not None:
-            add(base)
+            neighbor = add(base)
+            if neighbor is not None:
+                yield neighbor
 
         if old_orientation is None:
             orientations = heavy_rotation(package)
@@ -177,7 +180,9 @@ def get_childhood_neighbors(state):
 
                 for orientation in orientations:
                     if will_it_work(truck, package, pos, orientation):
-                        add(new_chapter(base, package, truck, pos, orientation))
+                        neighbor = add(new_chapter(base, package, truck, pos, orientation))
+                        if neighbor is not None:
+                            yield neighbor
 
         if old_truck is not None:
             old_size = love_size(package, old_orientation)
@@ -187,7 +192,11 @@ def get_childhood_neighbors(state):
                     continue
 
                 if will_it_work(old_truck, package, old_pos, orientation):
-                    add(new_chapter(state, package, old_truck, old_pos, orientation))
+                    neighbor = add(
+                        new_chapter(state, package, old_truck, old_pos, orientation)
+                    )
+                    if neighbor is not None:
+                        yield neighbor
 
     # tuker posisi / ganti paket baru
     for a in packages:
@@ -207,14 +216,18 @@ def get_childhood_neighbors(state):
                     continue
 
                 replaced = new_chapter(base, a, truck_b, pos_b, orientation_a)
-                add(replaced)
+                neighbor = add(replaced)
+                if neighbor is not None:
+                    yield neighbor
 
                 for pos_b_new in heroine_candidate(replaced, truck_b, skip=a):
                     for orientation_b in [state.get_package_orientation(b)]:
                         if not will_it_work(truck_b, b, pos_b_new, orientation_b):
                             continue
                         candidate = new_chapter(replaced, b, truck_b, pos_b_new, orientation_b)
-                        add(candidate)
+                        neighbor = add(candidate)
+                        if neighbor is not None:
+                            yield neighbor
 
     # swap posisi paket
     for i, a in enumerate(packages):
@@ -231,9 +244,12 @@ def get_childhood_neighbors(state):
             candidate.package_position[b] = state.get_package_position(a)
             candidate.package_orientation[a] = state.get_package_orientation(b)
             candidate.package_orientation[b] = state.get_package_orientation(a)
-            add(candidate)
+            neighbor = add(candidate)
+            if neighbor is not None:
+                yield neighbor
 
-    return neighbors
+def get_childhood_neighbors(state):
+    return list(iter_childhood_neighbors(state))
 
 def total_value(isekai):
     return sum(p.value for p in isekai.packages)
@@ -264,14 +280,35 @@ def climbing(initial, mode = "Steepest", max_iterations = 500, rng = None, detai
             stop_reason = "Semua paket sudah masuk truck"
             break
 
-        neighbors = get_childhood_neighbors(current)
-        if visited is not None:
-            neighbors = [n for n in neighbors if my_identity(n) not in visited]
-        if not neighbors:
+        best_score = None
+        best_neighbor = None
+        best_tie_count = 0
+        improving_neighbor = None
+        improving_count = 0
+
+        for neighbor in iter_childhood_neighbors(current):
+            neighbor_key = my_identity(neighbor)
+            if visited is not None and neighbor_key in visited:
+                continue
+
+            score = love_score(neighbor)
+            if best_score is None or score > best_score:
+                best_score = score
+                best_neighbor = neighbor
+                best_tie_count = 1
+            elif score == best_score:
+                best_tie_count += 1
+                if rng.randrange(best_tie_count) == 0:
+                    best_neighbor = neighbor
+
+            if mode == "Stochastic" and score > current_score:
+                improving_count += 1
+                if rng.randrange(improving_count) == 0:
+                    improving_neighbor = neighbor
+
+        if best_neighbor is None:
             stop_reason = "no more neighbors"
             break
-        scored = [(love_score(n), n) for n in neighbors]
-        best_score = max(score for score, _ in scored)
 
         if best_score < current_score:
             stop_reason = "sudah Local Optimum"
@@ -286,18 +323,19 @@ def climbing(initial, mode = "Steepest", max_iterations = 500, rng = None, detai
                 break
             sideway_streak += 1
             sideway_count += 1
-            candidates = [n for score, n in scored if score == best_score]
+            current = best_neighbor
+            current_score = best_score
 
         else:
             if reset_sideways_on_improve:
                 sideway_streak = 0
             if mode == "Steepest":
-                candidates = [n for score, n in scored if score == best_score]
+                current = best_neighbor
+                current_score = best_score
             else:
-                candidates = [n for score, n in scored if score > current_score]
+                current = improving_neighbor
+                current_score = love_score(current)
 
-        current = rng.choice(candidates)
-        current_score = love_score(current)
         if visited is not None:
             visited.add(my_identity(current))
         our_history.append(current_score)
