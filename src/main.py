@@ -100,7 +100,11 @@ def run_selected_algorithm(args: argparse.Namespace, isekai) -> dict[str, Any]:
         elif args.hc_mode == "stochastic":
             result = run_stochastic_hill_climbing(isekai, **common)
         elif args.hc_mode == "sideway":
-            result = run_sideway_hill_climbing(isekai, **common)
+            result = run_sideway_hill_climbing(
+                isekai,
+                max_sideways=args.max_sideways,
+                **common,
+            )
         else:
             result = run_random_restart_hc(
                 isekai,
@@ -143,8 +147,15 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path)
     print(f"Testcase        : {args.testcase}")
     if result["algorithm"] == "hc":
         print(f"Mode HC         : {args.hc_mode.replace('-', ' ').title()}")
-        if args.hc_mode == "random-restart":
+        if args.hc_mode == "sideway":
+            sideway_count = result["raw_result"].get("sideway_count", 0)
+            print(f"Sideway         : {sideway_count}/{args.max_sideways}")
+        elif args.hc_mode == "random-restart":
             print(f"Jumlah restart  : {result['raw_result'].get('restarts', 0)}/{args.restarts}")
+            print(
+                "Iterasi/restart : "
+                f"{result['raw_result'].get('iterations_per_restart', [])}"
+            )
     elif result["algorithm"] in ("ga", "ga2"):
         print(f"Ukuran populasi : {args.population}")
     print(f"Nilai terbaik yang mungkin : {result['raw_result'].get('max_value')}")
@@ -170,8 +181,17 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path)
         output_file.write(f"Testcase        : {args.testcase}\n")
         if result["algorithm"] == "hc":
             output_file.write(f"Mode HC         : {args.hc_mode.replace('-', ' ').title()}\n")
-            if args.hc_mode == "random-restart":
+            if args.hc_mode == "sideway":
+                sideway_count = result["raw_result"].get("sideway_count", 0)
+                output_file.write(
+                    f"Sideway         : {sideway_count}/{args.max_sideways}\n"
+                )
+            elif args.hc_mode == "random-restart":
                 output_file.write(f"Jumlah restart  : {result['raw_result'].get('restarts', 0)}/{args.restarts}\n")
+                output_file.write(
+                    "Iterasi/restart : "
+                    f"{result['raw_result'].get('iterations_per_restart', [])}\n"
+                )
         elif result["algorithm"] in ("ga", "ga2\n"):
             output_file.write(f"Ukuran populasi : {args.population}\n")
         output_file.write(f"Nilai terbaik yang mungkin : {result['raw_result'].get('max_value')}\n")
@@ -285,6 +305,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=5,
         help="Jumlah maksimum restart untuk HC mode random-restart.",
+    )
+    parser.add_argument(
+        "--max-sideways",
+        type=int,
+        default=20,
+        help="Jumlah maksimum sideways move untuk HC mode sideway.",
     )
     parser.add_argument(
         "--population",
