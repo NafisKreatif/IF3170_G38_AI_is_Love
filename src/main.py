@@ -52,7 +52,7 @@ def normalize_result(algorithm: str, result: dict[str, Any]) -> dict[str, Any]:
         # State akhir adalah state valid terbaik.
         history["diagnostics"]["current_package_value"] = result.get("value_history", [])
     elif algorithm == "ga" or algorithm == "ga2":
-        history["diagnostics"]["best_valid_value"] = result.get("best_value_history", [])
+        history["diagnostics"]["population_best_objective"] = result.get("best_value_history", [])
         history["diagnostics"]["population_best_fitness"] = result.get("max_fitness_history", [])
         history["diagnostics"]["population_mean_fitness"] = result.get("avg_fitness_history", [])
         history["diagnostics"]["population_worst_fitness"] = result.get("min_fitness_history", [])
@@ -127,10 +127,15 @@ def run_selected_algorithm(args: argparse.Namespace, isekai) -> dict[str, Any]:
             jumlah_penduduk=args.population,
         )
 
+    total_value = 0
+    for packages in isekai.packages:
+        total_value += packages.value
+    result["max_value"] = total_value
+    
     return normalize_result(args.algorithm, result)
 
 
-def print_summary(result: dict[str, Any], args: argparse.Namespace) -> None:
+def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path) -> None:
     final_state = result["final_state"]
     valid = final_state is not None and final_state.is_valid()
     print("\n===== Ringkasan hasil =====")
@@ -142,6 +147,7 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace) -> None:
             print(f"Jumlah restart  : {result['raw_result'].get('restarts', 0)}/{args.restarts}")
     elif result["algorithm"] in ("ga", "ga2"):
         print(f"Ukuran populasi : {args.population}")
+    print(f"Nilai terbaik yang mungkin : {result['raw_result'].get('max_value')}")
     print(f"Nilai awal      : {result['initial_value']}")
     print(f"Nilai akhir     : {result['final_value']}")
     print(f"State akhir     : {'valid' if valid else 'tidak ada solusi valid'}")
@@ -158,6 +164,32 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace) -> None:
     if stop_reason:
         print(f"Alasan berhenti : {stop_reason}")
 
+    with open(output_path, "w") as output_file:
+        output_file.write("\n===== Ringkasan hasil =====")
+        output_file.write(f"Algoritma       : {ALGORITHM_LABELS[result['algorithm']]}")
+        output_file.write(f"Testcase        : {args.testcase}")
+        if result["algorithm"] == "hc":
+            output_file.write(f"Mode HC         : {args.hc_mode.replace('-', ' ').title()}")
+            if args.hc_mode == "random-restart":
+                output_file.write(f"Jumlah restart  : {result['raw_result'].get('restarts', 0)}/{args.restarts}")
+        elif result["algorithm"] in ("ga", "ga2"):
+            output_file.write(f"Ukuran populasi : {args.population}")
+        output_file.write(f"Nilai terbaik yang mungkin : {result['raw_result'].get('max_value')}")
+        output_file.write(f"Nilai awal      : {result['initial_value']}")
+        output_file.write(f"Nilai akhir     : {result['final_value']}")
+        output_file.write(f"State akhir     : {'valid' if valid else 'tidak ada solusi valid'}")
+        if result["algorithm"] == "hc" and args.hc_mode == "random-restart":
+            output_file.write(
+                f"Iterasi total    : {result['iterations']} "
+                f"(maks. {args.iterations} per restart)"
+            )
+        else:
+            output_file.write(f"Iterasi/generasi: {result['iterations']}/{args.iterations}")
+        output_file.write(f"Durasi          : {result['duration']:.3f} detik")
+
+        if stop_reason:
+            output_file.write(f"Alasan berhenti : {stop_reason}")
+
 
 def plot_history(result: dict[str, Any], output_path: Path) -> None:
     history = result["history"]
@@ -166,7 +198,7 @@ def plot_history(result: dict[str, Any], output_path: Path) -> None:
 
     if history["best_valid_value"]:
         values = history["best_valid_value"]
-        label = "Best valid objective" if result["algorithm"] == "ga2" else "Best valid package value"
+        label = "Best valid package value"
         ax.plot(range(len(values)), values, label=label)
         has_series = True
 
@@ -177,19 +209,19 @@ def plot_history(result: dict[str, Any], output_path: Path) -> None:
         has_series = True
 
     for key, label in (
-        ("population_best_fitness", "GA v1 best fitness"),
-        ("population_mean_fitness", "GA v1 mean fitness"),
-        ("population_worst_fitness", "GA v1 worst fitness"),
+        ("population_best_objective", "GA best objective"),
+        ("population_best_fitness", "GA best fitness"),
+        ("population_mean_fitness", "GA mean fitness"),
+        ("population_worst_fitness", "GA worst fitness"),
     ):
+        if result["algorithm"] == "ga":
+            label = label.replace("GA", "GAv1")
+        else:
+            label = label.replace("GA", "GAv2")
         values = diagnostics.get(key)
         if values:
             ax.plot(range(len(values)), values, label=label)
             has_series = True
-
-    mean_objective = history["population_mean_objective"]
-    if mean_objective:
-        ax.plot(range(len(mean_objective)), mean_objective, label="Population mean objective")
-        has_series = True
 
     if not has_series:
         plt.close(fig)
@@ -270,7 +302,7 @@ def main() -> None:
     args = parse_args()
     isekai = load_isekai_from_file(str(DATA_DIR / args.testcase))
     result = run_selected_algorithm(args, isekai)
-    print_summary(result, args)
+    print_summary(result, args, output_path = RESULTS_DIR / f"{args.algorithm}_{Path(args.testcase).stem}.txt")
 
     initial_state = result["initial_state"]
     final_state = result["final_state"]
