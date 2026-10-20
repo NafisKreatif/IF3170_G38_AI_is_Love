@@ -23,7 +23,7 @@ from visualization import save_state_comparison
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-RESULTS_DIR = PROJECT_ROOT / "results"
+RESULTS_DIR = PROJECT_ROOT / "output"
 ALGORITHM_LABELS = {
     "hc": "Hill Climbing (HC)",
     "sa": "Simulated Annealing (SA)",
