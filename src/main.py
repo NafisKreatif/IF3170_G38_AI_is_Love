@@ -244,6 +244,29 @@ def plot_history(result: dict[str, Any], output_path: Path) -> None:
     plt.close(fig)
     print(f"Grafik riwayat disimpan: \"{output_path}\"")
 
+def plot_sa_acceptance(result, output_path):
+    raw = result["raw_result"]
+    prob = raw.get("acceptance_prob_history")
+    delta = raw.get("deltaE_history")
+    temp = raw.get("temperature_history")
+    if prob is None:
+        return
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
+    ax1.plot(prob, label="e^(ΔE/T)", color="#636EFA")
+    ax1.set_ylabel("acceptance probability")
+    ax1.set_ylim(-0.02, 1.02)
+    ax1.grid(True, alpha=0.3)
+    ax1.legend()
+    ax2.plot(temp, label="T(t)", color="#FFA15A")
+    ax2.set_xlabel("recorded iteration")
+    ax2.set_ylabel("temperature")
+    ax2.grid(True, alpha=0.3)
+    ax2.legend()
+    fig.tight_layout()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+    print(f"Grafik SA acceptance disimpan: \"{output_path}\"")
 
 def parse_args() -> argparse.Namespace:
     testcase_files = sorted(path.name for path in DATA_DIR.glob("*.json"))
@@ -324,6 +347,7 @@ def main() -> None:
 
     if not args.no_plot:
         output_path = RESULTS_DIR / f"{args.algorithm}_{Path(args.testcase).stem}.png"
+        plot_sa_acceptance(result, RESULTS_DIR / f"sa_{Path(args.testcase).stem}_acceptance.png")
         plot_history(result, output_path)
 
 
