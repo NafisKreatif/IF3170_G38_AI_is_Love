@@ -119,12 +119,14 @@ def run_selected_algorithm(args: argparse.Namespace, isekai) -> dict[str, Any]:
             isekai,
             generation=args.iterations,
             jumlah_penduduk=args.population,
+            persen_kaum_elit=args.persen_elit
         )
     else:
         result = run_genetic_algorithm_v2(
             isekai,
             generation=args.iterations,
             jumlah_penduduk=args.population,
+
         )
 
     total_value = 0
@@ -292,6 +294,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=50,
         help="Ukuran populasi; hanya digunakan oleh GA dan GA2.",
+    )
+    parser.add_argument(
+        "--persen-elit",
+        type=float,
+        default=0.01,
+        help="Persentase populasi elit; hanya digunakan oleh GA dan GA2.",
     )
     parser.add_argument(
         "--no-plot",
