@@ -23,7 +23,7 @@ from visualization import save_state_comparison
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-RESULTS_DIR = PROJECT_ROOT / "results"
+RESULTS_DIR = PROJECT_ROOT / "output"
 ALGORITHM_LABELS = {
     "hc": "Hill Climbing (HC)",
     "sa": "Simulated Annealing (SA)",
@@ -123,12 +123,14 @@ def run_selected_algorithm(args: argparse.Namespace, isekai) -> dict[str, Any]:
             isekai,
             generation=args.iterations,
             jumlah_penduduk=args.population,
+            persen_kaum_elit=args.persen_elit
         )
     else:
         result = run_genetic_algorithm_v2(
             isekai,
             generation=args.iterations,
             jumlah_penduduk=args.population,
+
         )
 
     total_value = 0
@@ -139,7 +141,7 @@ def run_selected_algorithm(args: argparse.Namespace, isekai) -> dict[str, Any]:
     return normalize_result(args.algorithm, result)
 
 
-def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path) -> None:
+def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path: Path) -> None:
     final_state = result["final_state"]
     valid = final_state is not None and final_state.is_valid()
     print("\n===== Ringkasan hasil =====")
@@ -175,6 +177,7 @@ def print_summary(result: dict[str, Any], args: argparse.Namespace, output_path)
     if stop_reason:
         print(f"Alasan berhenti : {stop_reason}")
 
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as output_file:
         output_file.write("\n===== Ringkasan hasil =====\n")
         output_file.write(f"Algoritma       : {ALGORITHM_LABELS[result['algorithm']]}\n")
@@ -317,6 +320,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=50,
         help="Ukuran populasi; hanya digunakan oleh GA dan GA2.",
+    )
+    parser.add_argument(
+        "--persen-elit",
+        type=float,
+        default=0.01,
+        help="Persentase populasi elit; hanya digunakan oleh GA dan GA2.",
     )
     parser.add_argument(
         "--no-plot",

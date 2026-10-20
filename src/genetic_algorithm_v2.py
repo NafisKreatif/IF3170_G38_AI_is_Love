@@ -438,7 +438,7 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         for i in range(len(orde_baru)):
             if random.random() < peluang_kelainan:
                 kelainan(orde_baru[i])
-                orde_baru[i].recalculate_position()
+            orde_baru[i].recalculate_position()
             kesejahteraan_rakyat[orde_baru[i]] = kesejahteraan(orde_baru[i]) + kesengsaraan(orde_baru[i])
 
         # Hitung ulang kesejahteraan, buat seleksi nanti
