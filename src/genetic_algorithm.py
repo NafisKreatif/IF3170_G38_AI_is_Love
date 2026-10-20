@@ -17,8 +17,6 @@ def ngasal(isekai: Isekai) -> IsekaiConfiguration:
         for package in isekai.packages:
             if config.get_package_truck(package) is truck:
                 order[truck].append(package)
-                if random.random() < 0.25:
-                    keguling(config, package)
         random.shuffle(order[truck])    
         for package in order[truck]:
             position = config.get_package_position(package)
@@ -154,6 +152,10 @@ def kelempar(config: IsekaiConfiguration, package: LovePackage = None):
 
     if truck is None:
         truck = config.isekai.trucks[random.randint(0, len(config.isekai.trucks) - 1)]
+        orientation_value = ["x", "y", "z"]
+        random.shuffle(orientation_value)
+        orientation = Orientation(orientation_value[0], orientation_value[1], orientation_value[2])
+        config.set_package_orientation(package, orientation)
         package_dimensions = config.get_package_dimensions(package)
         if (truck.dimensions.width >= package_dimensions.width and
             truck.dimensions.height >= package_dimensions.height and
@@ -211,8 +213,7 @@ def kesengsaraan(config: IsekaiConfiguration):
 
 # main function
 def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05, debug=False, seed:int=None) -> dict:
-    if seed is not None:
-        random.seed(seed)
+    random.seed(seed)
 
     start_time = time.perf_counter()
     
@@ -419,10 +420,10 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         "final_state": the_perfect_world,
         "initial_value": the_first_kesejahteraan,
         "final_value": the_perfect_kesejahteraan,
-        "max_valid_value_history": list_perfect,
-        "max_value_history": list_termakmur,
-        "avg_value_history": list_terbiasa,
-        "min_value_history": list_termiskin,
+        "best_value_history": list_perfect,
+        "max_fitness_history": list_termakmur,
+        "avg_fitness_history": list_terbiasa,
+        "min_fitness_history": list_termiskin,
         "iterations": generation,
         "populations": jumlah_penduduk,
         "duration": time.perf_counter() - start_time

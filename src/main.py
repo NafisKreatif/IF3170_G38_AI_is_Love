@@ -51,13 +51,11 @@ def normalize_result(algorithm: str, result: dict[str, Any]) -> dict[str, Any]:
         # History SA bisa memuat state antara yang tidak valid(buat diagnostik)
         # State akhir adalah state valid terbaik.
         history["diagnostics"]["current_package_value"] = result.get("value_history", [])
-    elif algorithm == "ga2":
-        history["best_valid_value"] = result.get("max_objective_history", [])
-        history["population_mean_objective"] = result.get("avg_objective_history", [])
-    elif algorithm == "ga":
-        history["diagnostics"]["population_best_fitness"] = result.get("max_value_history", [])
-        history["diagnostics"]["population_mean_fitness"] = result.get("avg_value_history", [])
-        history["diagnostics"]["population_worst_fitness"] = result.get("min_value_history", [])
+    elif algorithm == "ga" or algorithm == "ga2":
+        history["diagnostics"]["best_valid_value"] = result.get("best_value_history", [])
+        history["diagnostics"]["population_best_fitness"] = result.get("max_fitness_history", [])
+        history["diagnostics"]["population_mean_fitness"] = result.get("avg_fitness_history", [])
+        history["diagnostics"]["population_worst_fitness"] = result.get("min_fitness_history", [])
 
     initial_value = result.get("initial_value")
     final_value = result.get("final_value")
@@ -200,7 +198,7 @@ def plot_history(result: dict[str, Any], output_path: Path) -> None:
 
     ax.set_title(f"{result['algorithm'].upper()} history")
     ax.set_xlabel("Iteration / generation")
-    ylabel = "Fitness (package value + penalties)" if result["algorithm"] == "ga" else "Objective value"
+    ylabel = "Fitness (package value + penalties)" if result["algorithm"].startswith("ga") else "Objective value"
     ax.set_ylabel(ylabel)
     ax.grid(True, alpha=0.3)
     ax.legend()

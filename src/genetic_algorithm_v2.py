@@ -97,8 +97,6 @@ def ngasal(isekai: Isekai) -> IsekaiOrder:
         for package in isekai.packages:
             if config.get_package_truck(package) is truck:
                 config.package_order[truck].append(package)
-                if random.random() < 0.25:
-                    keguling(config, package)
         random.shuffle(config.package_order[truck])    
         for package in config.package_order[truck]:
             position = config.get_package_position(package)
@@ -263,6 +261,10 @@ def kelempar(config: IsekaiOrder, package: LovePackage = None):
 
     if truck is None:
         truck = config.isekai.trucks[random.randint(0, len(config.isekai.trucks) - 1)]
+        orientation_value = ["x", "y", "z"]
+        random.shuffle(orientation_value)
+        orientation = Orientation(orientation_value[0], orientation_value[1], orientation_value[2])
+        config.set_package_orientation(package, orientation)
         package_dimensions = config.get_package_dimensions(package)
         if (truck.dimensions.width >= package_dimensions.width and
             truck.dimensions.height >= package_dimensions.height and
@@ -331,8 +333,7 @@ def kesengsaraan(config: IsekaiConfiguration):
 
 # main function
 def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan=0.05, persen_kaum_elit=0.05, debug=False, seed:int=None) -> dict:
-    if seed is not None:
-        random.seed(seed)
+    random.seed(seed)
 
     start_time = time.perf_counter()
     
@@ -348,8 +349,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     list_termakmur = []
     list_terbiasa = []
     list_perfect = []
-    list_objective_max = []
-    list_objective_avg = []
 
     the_perfect_world = IsekaiConfiguration(isekai)
     the_perfect_kesejahteraan = 0
@@ -392,14 +391,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         list_termakmur.append(termakmur)
         list_terbiasa.append(terbiasa) 
         list_perfect.append(the_perfect_kesejahteraan)
-        objective_values = [
-            kesejahteraan(rakyat, check_validity=True)
-            for rakyat in orde_lama
-        ]
-        list_objective_max.append(max(objective_values, default=0))
-        list_objective_avg.append(
-            sum(objective_values) / len(objective_values) if objective_values else 0.0
-        )
 
         if debug:
             print(f"Generation {i}:")
@@ -540,14 +531,6 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
     list_termakmur.append(termakmur)
     list_terbiasa.append(terbiasa)
     list_perfect.append(the_perfect_kesejahteraan)
-    objective_values = [
-        kesejahteraan(rakyat, check_validity=True)
-        for rakyat in orde_lama
-    ]
-    list_objective_max.append(max(objective_values, default=0))
-    list_objective_avg.append(
-        sum(objective_values) / len(objective_values) if objective_values else 0.0
-    )
 
     if debug:
         print(f"Generation {generation}:")
@@ -561,12 +544,10 @@ def dolan(isekai: Isekai, generation=1000, jumlah_penduduk=100, peluang_kelainan
         "final_state": the_perfect_world,
         "initial_value": the_first_kesejahteraan,
         "final_value": the_perfect_kesejahteraan,
-        "max_valid_value_history": list_perfect,
+        "best_value_history": list_perfect,
         "max_value_history": list_termakmur,
         "avg_value_history": list_terbiasa,
         "min_value_history": list_termiskin,
-        "max_objective_history": list_objective_max,
-        "avg_objective_history": list_objective_avg,
         "iterations": generation,
         "populations": jumlah_penduduk,
         "duration": time.perf_counter() - start_time
